@@ -1,0 +1,536 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		6C7923401F0876370035EAAA /* SerialValueTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C79233F1F0876370035EAAA /* SerialValueTransformer.m */; };
+		6C7923431F08764B0035EAAA /* ModelValueTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7923421F08764B0035EAAA /* ModelValueTransformer.m */; };
+		6C7923461F087B0D0035EAAA /* Device.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7923451F087B0D0035EAAA /* Device.m */; };
+		6CDBE8191F081E9F006DD681 /* Window.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6CDBE8181F081E9F006DD681 /* Window.xib */; };
+		6CF1B3BF1F080AFE00060299 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CF1B3BE1F080AFE00060299 /* AppDelegate.m */; };
+		6CF1B3C21F080AFE00060299 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CF1B3C11F080AFE00060299 /* main.m */; };
+		6CF1B3D51F080AFE00060299 /* AirWatchBuddyTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CF1B3D41F080AFE00060299 /* AirWatchBuddyTests.m */; };
+		6CF1B3E01F080AFE00060299 /* AirWatchBuddyUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CF1B3DF1F080AFE00060299 /* AirWatchBuddyUITests.m */; };
+		6CF9940E1F0D7A45000BDFDA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6CF9940D1F0D7A45000BDFDA /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		6CF1B3D11F080AFE00060299 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6CF1B3B21F080AFE00060299 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6CF1B3B91F080AFE00060299;
+			remoteInfo = AirWatchBuddy;
+		};
+		6CF1B3DC1F080AFE00060299 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6CF1B3B21F080AFE00060299 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6CF1B3B91F080AFE00060299;
+			remoteInfo = AirWatchBuddy;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		6C79233E1F0876370035EAAA /* SerialValueTransformer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SerialValueTransformer.h; sourceTree = "<group>"; };
+		6C79233F1F0876370035EAAA /* SerialValueTransformer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SerialValueTransformer.m; sourceTree = "<group>"; };
+		6C7923411F08764B0035EAAA /* ModelValueTransformer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ModelValueTransformer.h; sourceTree = "<group>"; };
+		6C7923421F08764B0035EAAA /* ModelValueTransformer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelValueTransformer.m; sourceTree = "<group>"; };
+		6C7923441F087B0D0035EAAA /* Device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Device.h; sourceTree = "<group>"; };
+		6C7923451F087B0D0035EAAA /* Device.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Device.m; sourceTree = "<group>"; };
+		6CDBE8181F081E9F006DD681 /* Window.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Window.xib; sourceTree = "<group>"; };
+		6CF1B3BA1F080AFE00060299 /* AirWatchBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AirWatchBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6CF1B3BD1F080AFE00060299 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		6CF1B3BE1F080AFE00060299 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		6CF1B3C11F080AFE00060299 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		6CF1B3CB1F080AFE00060299 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6CF1B3D01F080AFE00060299 /* AirWatchBuddyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirWatchBuddyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6CF1B3D41F080AFE00060299 /* AirWatchBuddyTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AirWatchBuddyTests.m; sourceTree = "<group>"; };
+		6CF1B3D61F080AFE00060299 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6CF1B3DB1F080AFE00060299 /* AirWatchBuddyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AirWatchBuddyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6CF1B3DF1F080AFE00060299 /* AirWatchBuddyUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AirWatchBuddyUITests.m; sourceTree = "<group>"; };
+		6CF1B3E11F080AFE00060299 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		6CF9940D1F0D7A45000BDFDA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6CF1B3B71F080AFE00060299 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CF1B3CD1F080AFE00060299 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CF1B3D81F080AFE00060299 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		6CF1B3B11F080AFE00060299 = {
+			isa = PBXGroup;
+			children = (
+				6CF1B3BC1F080AFE00060299 /* AirWatchBuddy */,
+				6CF1B3D31F080AFE00060299 /* AirWatchBuddyTests */,
+				6CF1B3DE1F080AFE00060299 /* AirWatchBuddyUITests */,
+				6CF1B3BB1F080AFE00060299 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		6CF1B3BB1F080AFE00060299 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6CF1B3BA1F080AFE00060299 /* AirWatchBuddy.app */,
+				6CF1B3D01F080AFE00060299 /* AirWatchBuddyTests.xctest */,
+				6CF1B3DB1F080AFE00060299 /* AirWatchBuddyUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6CF1B3BC1F080AFE00060299 /* AirWatchBuddy */ = {
+			isa = PBXGroup;
+			children = (
+				6CF9940D1F0D7A45000BDFDA /* Assets.xcassets */,
+				6CF1B3BD1F080AFE00060299 /* AppDelegate.h */,
+				6CF1B3BE1F080AFE00060299 /* AppDelegate.m */,
+				6CDBE8181F081E9F006DD681 /* Window.xib */,
+				6CF1B3CB1F080AFE00060299 /* Info.plist */,
+				6CF1B3C01F080AFE00060299 /* Supporting Files */,
+				6C79233E1F0876370035EAAA /* SerialValueTransformer.h */,
+				6C79233F1F0876370035EAAA /* SerialValueTransformer.m */,
+				6C7923411F08764B0035EAAA /* ModelValueTransformer.h */,
+				6C7923421F08764B0035EAAA /* ModelValueTransformer.m */,
+				6C7923441F087B0D0035EAAA /* Device.h */,
+				6C7923451F087B0D0035EAAA /* Device.m */,
+			);
+			path = AirWatchBuddy;
+			sourceTree = "<group>";
+		};
+		6CF1B3C01F080AFE00060299 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				6CF1B3C11F080AFE00060299 /* main.m */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		6CF1B3D31F080AFE00060299 /* AirWatchBuddyTests */ = {
+			isa = PBXGroup;
+			children = (
+				6CF1B3D41F080AFE00060299 /* AirWatchBuddyTests.m */,
+				6CF1B3D61F080AFE00060299 /* Info.plist */,
+			);
+			path = AirWatchBuddyTests;
+			sourceTree = "<group>";
+		};
+		6CF1B3DE1F080AFE00060299 /* AirWatchBuddyUITests */ = {
+			isa = PBXGroup;
+			children = (
+				6CF1B3DF1F080AFE00060299 /* AirWatchBuddyUITests.m */,
+				6CF1B3E11F080AFE00060299 /* Info.plist */,
+			);
+			path = AirWatchBuddyUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6CF1B3B91F080AFE00060299 /* AirWatchBuddy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6CF1B3E41F080AFE00060299 /* Build configuration list for PBXNativeTarget "AirWatchBuddy" */;
+			buildPhases = (
+				6CF1B3B61F080AFE00060299 /* Sources */,
+				6CF1B3B71F080AFE00060299 /* Frameworks */,
+				6CF1B3B81F080AFE00060299 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AirWatchBuddy;
+			productName = AirWatchBuddy;
+			productReference = 6CF1B3BA1F080AFE00060299 /* AirWatchBuddy.app */;
+			productType = "com.apple.product-type.application";
+		};
+		6CF1B3CF1F080AFE00060299 /* AirWatchBuddyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6CF1B3E71F080AFE00060299 /* Build configuration list for PBXNativeTarget "AirWatchBuddyTests" */;
+			buildPhases = (
+				6CF1B3CC1F080AFE00060299 /* Sources */,
+				6CF1B3CD1F080AFE00060299 /* Frameworks */,
+				6CF1B3CE1F080AFE00060299 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6CF1B3D21F080AFE00060299 /* PBXTargetDependency */,
+			);
+			name = AirWatchBuddyTests;
+			productName = AirWatchBuddyTests;
+			productReference = 6CF1B3D01F080AFE00060299 /* AirWatchBuddyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		6CF1B3DA1F080AFE00060299 /* AirWatchBuddyUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6CF1B3EA1F080AFE00060299 /* Build configuration list for PBXNativeTarget "AirWatchBuddyUITests" */;
+			buildPhases = (
+				6CF1B3D71F080AFE00060299 /* Sources */,
+				6CF1B3D81F080AFE00060299 /* Frameworks */,
+				6CF1B3D91F080AFE00060299 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				6CF1B3DD1F080AFE00060299 /* PBXTargetDependency */,
+			);
+			name = AirWatchBuddyUITests;
+			productName = AirWatchBuddyUITests;
+			productReference = 6CF1B3DB1F080AFE00060299 /* AirWatchBuddyUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6CF1B3B21F080AFE00060299 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0830;
+				ORGANIZATIONNAME = "Baker, Jeremiah (NIH/NIMH) [C]";
+				TargetAttributes = {
+					6CF1B3B91F080AFE00060299 = {
+						CreatedOnToolsVersion = 8.3.3;
+						DevelopmentTeam = B8YRAMS454;
+						ProvisioningStyle = Automatic;
+					};
+					6CF1B3CF1F080AFE00060299 = {
+						CreatedOnToolsVersion = 8.3.3;
+						DevelopmentTeam = B8YRAMS454;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 6CF1B3B91F080AFE00060299;
+					};
+					6CF1B3DA1F080AFE00060299 = {
+						CreatedOnToolsVersion = 8.3.3;
+						DevelopmentTeam = B8YRAMS454;
+						ProvisioningStyle = Automatic;
+						TestTargetID = 6CF1B3B91F080AFE00060299;
+					};
+				};
+			};
+			buildConfigurationList = 6CF1B3B51F080AFE00060299 /* Build configuration list for PBXProject "AirWatchBuddy" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 6CF1B3B11F080AFE00060299;
+			productRefGroup = 6CF1B3BB1F080AFE00060299 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6CF1B3B91F080AFE00060299 /* AirWatchBuddy */,
+				6CF1B3CF1F080AFE00060299 /* AirWatchBuddyTests */,
+				6CF1B3DA1F080AFE00060299 /* AirWatchBuddyUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		6CF1B3B81F080AFE00060299 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6CF9940E1F0D7A45000BDFDA /* Assets.xcassets in Resources */,
+				6CDBE8191F081E9F006DD681 /* Window.xib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CF1B3CE1F080AFE00060299 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CF1B3D91F080AFE00060299 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6CF1B3B61F080AFE00060299 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6CF1B3C21F080AFE00060299 /* main.m in Sources */,
+				6C7923401F0876370035EAAA /* SerialValueTransformer.m in Sources */,
+				6CF1B3BF1F080AFE00060299 /* AppDelegate.m in Sources */,
+				6C7923461F087B0D0035EAAA /* Device.m in Sources */,
+				6C7923431F08764B0035EAAA /* ModelValueTransformer.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CF1B3CC1F080AFE00060299 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6CF1B3D51F080AFE00060299 /* AirWatchBuddyTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6CF1B3D71F080AFE00060299 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6CF1B3E01F080AFE00060299 /* AirWatchBuddyUITests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6CF1B3D21F080AFE00060299 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6CF1B3B91F080AFE00060299 /* AirWatchBuddy */;
+			targetProxy = 6CF1B3D11F080AFE00060299 /* PBXContainerItemProxy */;
+		};
+		6CF1B3DD1F080AFE00060299 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6CF1B3B91F080AFE00060299 /* AirWatchBuddy */;
+			targetProxy = 6CF1B3DC1F080AFE00060299 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		6CF1B3E21F080AFE00060299 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		6CF1B3E31F080AFE00060299 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		6CF1B3E51F080AFE00060299 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = B8YRAMS454;
+				INFOPLIST_FILE = AirWatchBuddy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		6CF1B3E61F080AFE00060299 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = B8YRAMS454;
+				INFOPLIST_FILE = AirWatchBuddy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddy;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		6CF1B3E81F080AFE00060299 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = B8YRAMS454;
+				INFOPLIST_FILE = AirWatchBuddyTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AirWatchBuddy.app/Contents/MacOS/AirWatchBuddy";
+			};
+			name = Debug;
+		};
+		6CF1B3E91F080AFE00060299 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = B8YRAMS454;
+				INFOPLIST_FILE = AirWatchBuddyTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AirWatchBuddy.app/Contents/MacOS/AirWatchBuddy";
+			};
+			name = Release;
+		};
+		6CF1B3EB1F080AFE00060299 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = B8YRAMS454;
+				INFOPLIST_FILE = AirWatchBuddyUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddyUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = AirWatchBuddy;
+			};
+			name = Debug;
+		};
+		6CF1B3EC1F080AFE00060299 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = B8YRAMS454;
+				INFOPLIST_FILE = AirWatchBuddyUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddyUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = AirWatchBuddy;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6CF1B3B51F080AFE00060299 /* Build configuration list for PBXProject "AirWatchBuddy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6CF1B3E21F080AFE00060299 /* Debug */,
+				6CF1B3E31F080AFE00060299 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6CF1B3E41F080AFE00060299 /* Build configuration list for PBXNativeTarget "AirWatchBuddy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6CF1B3E51F080AFE00060299 /* Debug */,
+				6CF1B3E61F080AFE00060299 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6CF1B3E71F080AFE00060299 /* Build configuration list for PBXNativeTarget "AirWatchBuddyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6CF1B3E81F080AFE00060299 /* Debug */,
+				6CF1B3E91F080AFE00060299 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6CF1B3EA1F080AFE00060299 /* Build configuration list for PBXNativeTarget "AirWatchBuddyUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6CF1B3EB1F080AFE00060299 /* Debug */,
+				6CF1B3EC1F080AFE00060299 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 6CF1B3B21F080AFE00060299 /* Project object */;
+}

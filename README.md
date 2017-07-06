@@ -2,7 +2,7 @@
 
 ![](AirWatchBuddy.png)
 
-AirWatchBuddy is a simple API companion app that will pull device information from your AirWatch instance. It was written with the API guide for AirWatch 9.0 and up, as well as for macOS 10.12 and up.
+AirWatchBuddy is a simple API companion app that will pull device information from your AirWatch instance. It was written with the API guide for **AirWatch 9.0** and up, as well as for **macOS 10.12** and up. Older AirWatch instances and versions of OS X have not been tested.
 
 The information can be retrieved using one of 5 queries:
 * UserName - Can be a username, partial username or will search as a wildcard string. 

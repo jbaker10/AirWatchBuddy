@@ -14,6 +14,7 @@ static NSString *const kServerURIUser = @"/api/mdm/devices/search";
 static NSString *const kServerURIDevices = @"/api/mdm/devices";
 
 @interface AppDelegate ()
+- (IBAction)deviceTableView:(id)sender;
 @property (weak) IBOutlet NSTableView *deviceTableView;
 @property (weak) IBOutlet NSWindow *window;
 @property NSArray *devicesArray;
@@ -22,13 +23,13 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
 @property (weak) IBOutlet NSPopUpButtonCell *searchParamater;
 @property (weak) IBOutlet NSPopUpButton *maxDeviceSearch;
 @property (weak) IBOutlet NSWindow *credsWindow;
-- (IBAction)creds:(id)sender;
 @property (weak) IBOutlet NSTextFieldCell *serverURL;
 @property (weak) IBOutlet NSTextFieldCell *awTenantCode;
 @property (weak) IBOutlet NSTextFieldCell *userName;
 @property (weak) IBOutlet NSSecureTextFieldCell *password;
 - (IBAction)closeCredsSheet:(id)sender;
-- (IBAction)refreshDeviceDetails:(id)sender;
+- (IBAction)quit:(id)sender;
+- (IBAction)showCredentials:(id)sender;
 
 @end
 
@@ -48,7 +49,7 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
         self.password.stringValue = creds.firstObject;
         self.awTenantCode.stringValue = creds.lastObject;
     } else {
-        [self creds:self];
+        [self showCredentials:self];
     }
 }
 
@@ -56,7 +57,7 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
     NSString *creds = [[password stringByAppendingString:@"\n"] stringByAppendingString:awTenantCode];
     
     OSStatus ret = SecKeychainAddGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, (UInt32)creds.length, (void *)creds.UTF8String, NULL);
-    NSLog(@"The return code from trying to add the keychain entry: %d", ret);
+    //NSLog(@"The return code from trying to add the keychain entry: %d", ret);
     if (ret == errSecDuplicateItem) {
     } else if (ret != errSecSuccess) {
         // Should show an NSAlert here about how it couldn't set a keychain
@@ -131,7 +132,11 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
                 d.deviceMACAddress = device[@"MacAddress"];
                 d.devicePlatform = device[@"Platform"];
                 d.deviceOS = device[@"OperatingSystem"];
-                d.deviceSupervisedBool = device[@"IsSupervised"];
+                if ([device[@"IsSupervised"] boolValue]) {
+                    d.deviceSupervisedBool = @"True";
+                } else {
+                    d.deviceSupervisedBool = @"False";
+                }
                 d.deviceIMEI = device[@"Imei"];
                 d.devicePhoneNumber = device[@"PhoneNumber"];
                 d.deviceVirtualMemory = device[@"VirtualMemory"];
@@ -158,10 +163,15 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
 
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
-    NSLog(@"In the Table view function now.");
+    //NSLog(@"In the Table view function now.");
     NSDictionary *device = self.deviceTableArray[row];
     NSString *identifier = [tableColumn identifier];
-    NSLog(@"%@", device);
+    //NSLog(@"%@", device);
+    if ([identifier isEqualToString:@"user_column"]) {
+        NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"user_column" owner:self];
+        [cellView.textField setStringValue:device[@"UserEmailAddress"]];
+        return cellView;
+    }
     if ([identifier isEqualToString:@"serial_number_column"]) {
         NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"serial_number_column" owner:self];
         [cellView.textField setStringValue:device[@"SerialNumber"]];
@@ -218,7 +228,11 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
             d.deviceMACAddress = device[@"MacAddress"];
             d.devicePlatform = device[@"Platform"];
             d.deviceOS = device[@"OperatingSystem"];
-            d.deviceSupervisedBool = device[@"IsSupervised"];
+            if ([device[@"IsSupervised"] boolValue]) {
+                d.deviceSupervisedBool = @"True";
+            } else {
+                d.deviceSupervisedBool = @"False";
+            }
             d.deviceIMEI = device[@"Imei"];
             d.devicePhoneNumber = device[@"PhoneNumber"];
             d.deviceVirtualMemory = device[@"VirtualMemory"];
@@ -253,20 +267,7 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
 
 - (IBAction)searchButton:(id)sender {
     if ([self.searchParamater.selectedItem.title isEqualToString:@"UserName"]) {
-        NSLog(@"UserName was chosen. Checking if username entered");
-        NSLog(@"Search value given: %@", self.searchValue.stringValue);
-        if (self.searchValue.stringValue.length == 0) {
-            NSAlert *alert = [[NSAlert alloc] init];
-            [alert addButtonWithTitle:@"OK"];
-            [alert setMessageText:@"No username given!"];
-            [alert setInformativeText:@"Please enter a username to search for."];
-            [alert setAlertStyle:NSAlertStyleWarning];
-            [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                return;
-            }];
-        } else {
-            [self userDeviceDetails];
-        }
+        [self userDeviceDetails];
     } else {
         if (self.searchValue.stringValue.length == 0) {
             NSAlert *alert = [[NSAlert alloc] init];
@@ -287,17 +288,23 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
         return;
     }];
 }
-- (IBAction)creds:(id)sender {
-    [self.window beginSheet:self.credsWindow completionHandler:^(NSModalResponse returnCode) {
-        return;
-    }];
-}
+
 - (IBAction)closeCredsSheet:(id)sender {
     [self setCredsToKeychainWithUserName:self.userName.stringValue serverURL:self.serverURL.stringValue password:self.password.stringValue awTenantCode:self.awTenantCode.stringValue];
     [self.window endSheet:self.credsWindow];
 }
 
-- (IBAction)refreshDeviceDetails:(id)sender {
+- (IBAction)quit:(id)sender {
+    [NSApp terminate:self];
+}
+
+- (IBAction)showCredentials:(id)sender {
+    [self.window beginSheet:self.credsWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
+}
+
+- (IBAction)deviceTableView:(id)sender {
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     NSMutableArray *devicesArray = [NSMutableArray array];
     Device *d = [[Device alloc] init];
@@ -307,7 +314,11 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
     d.deviceMACAddress = self.deviceTableArray[selectedRow][@"MacAddress"];
     d.devicePlatform = self.deviceTableArray[selectedRow][@"Platform"];
     d.deviceOS = self.deviceTableArray[selectedRow][@"OperatingSystem"];
-    d.deviceSupervisedBool = self.deviceTableArray[selectedRow][@"IsSupervised"];
+    if ([self.deviceTableArray[selectedRow][@"IsSupervised"] boolValue]) {
+        d.deviceSupervisedBool = @"True";
+    } else {
+        d.deviceSupervisedBool = @"False";
+    }
     d.deviceIMEI = self.deviceTableArray[selectedRow][@"Imei"];
     d.devicePhoneNumber = self.deviceTableArray[selectedRow][@"PhoneNumber"];
     d.deviceVirtualMemory = self.deviceTableArray[selectedRow][@"VirtualMemory"];

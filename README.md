@@ -19,12 +19,12 @@ AirWatchBuddy also places a preference file on disk under `~/Library/Preferences
 
 * I'd like to add the ability to perform actions as well through the API calls, such as changing groups, or running commands on the device
 * Add right-click feature that will open many more API calls
-* Get GPS info (API URL for GPS info: `https://host/api/mdm/devices/gps/search?searchby={searchby}&startdatetime= {startdatetime}&enddatetime={enddatetime}&dayrange={dayrange}`)
-* Get installed Profile info (https://host/api/mdm/devices/{id}/profiles?page={page}&pagesize={pagesize})
-* Get installed Application info
-* Get Network info (https://host/api/mdm/devices/{id}/network)
-* Get Security info (https://host/api/mdm/devices/{id}/security)
-* and more... 
+  * Get GPS info (API URL for GPS info: `https://host/api/mdm/devices/gps/search?searchby={searchby}&startdatetime= {startdatetime}&enddatetime={enddatetime}&dayrange={dayrange}`)
+  * Get installed Profile info (https://host/api/mdm/devices/{id}/profiles?page={page}&pagesize={pagesize})
+  * Get installed Application info
+  * Get Network info (https://host/api/mdm/devices/{id}/network)
+  * Get Security info (https://host/api/mdm/devices/{id}/security)
+  * and more... 
 * Possibly change the name and/or logo
 * Continue polishing the UI
 

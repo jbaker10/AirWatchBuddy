@@ -5,13 +5,13 @@
 AirWatchBuddy is a simple API companion app that will pull device information from your AirWatch instance. It was written with the API guide for **AirWatch 9.0** and up, as well as for **macOS 10.12** and up. Older AirWatch instances and versions of OS X have not been tested.
 
 The information can be retrieved using one of 5 queries:
-* UserName - Can be a username, partial username or will search as a wildcard string. 
-* I.e. User `bakerjr`'s devices will be returned with a search for `baker` among any other Baker's in your organization
-* Or you can leave it empty and it will return all devices to the limit specified (i.e. 5, 50, 100)
-* SerialNumber - The device's Serial Number
-* IMEI - The device's IMEI number
-* MAC Address - The device's MAC Address
-* UDID - The device's UDID as defined in AirWatch
+* **UserName** - Can be a username, partial username or will search as a wildcard string. 
+  * I.e. User `bakerjr`'s devices will be returned with a search for `baker` among any other Baker's in your organization
+  * Or you can leave it empty and it will return all devices to the limit specified (i.e. 5, 50, 100)
+* **SerialNumber** - The device's Serial Number
+* **IMEI** - The device's IMEI number
+* **MAC Address** - The device's MAC Address
+* **UDID** - The device's UDID as defined in AirWatch
 
 AirwatchBuddy requires the FQDN or IP address for your AirWatch server, as well as your AW Tenant Code (your API code) and a username and password for an account with API privileges. This information is all stored in the user's default keychain.
 

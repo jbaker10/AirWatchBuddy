@@ -10,6 +10,9 @@
 		6C7923401F0876370035EAAA /* SerialValueTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C79233F1F0876370035EAAA /* SerialValueTransformer.m */; };
 		6C7923431F08764B0035EAAA /* ModelValueTransformer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7923421F08764B0035EAAA /* ModelValueTransformer.m */; };
 		6C7923461F087B0D0035EAAA /* Device.m in Sources */ = {isa = PBXBuildFile; fileRef = 6C7923451F087B0D0035EAAA /* Device.m */; };
+		6CC1F4021F13E9FC00F603BF /* MapAnnotations.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CC1F4011F13E9FC00F603BF /* MapAnnotations.m */; };
+		6CD890061F0FD0CF00292128 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CD890051F0FD0CF00292128 /* MapKit.framework */; };
+		6CD890091F0FD89B00292128 /* Location.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CD890081F0FD89B00292128 /* Location.m */; };
 		6CDBE8191F081E9F006DD681 /* Window.xib in Resources */ = {isa = PBXBuildFile; fileRef = 6CDBE8181F081E9F006DD681 /* Window.xib */; };
 		6CF1B3BF1F080AFE00060299 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CF1B3BE1F080AFE00060299 /* AppDelegate.m */; };
 		6CF1B3C21F080AFE00060299 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 6CF1B3C11F080AFE00060299 /* main.m */; };
@@ -42,6 +45,11 @@
 		6C7923421F08764B0035EAAA /* ModelValueTransformer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ModelValueTransformer.m; sourceTree = "<group>"; };
 		6C7923441F087B0D0035EAAA /* Device.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Device.h; sourceTree = "<group>"; };
 		6C7923451F087B0D0035EAAA /* Device.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Device.m; sourceTree = "<group>"; };
+		6CC1F4001F13E9FC00F603BF /* MapAnnotations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MapAnnotations.h; sourceTree = "<group>"; };
+		6CC1F4011F13E9FC00F603BF /* MapAnnotations.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MapAnnotations.m; sourceTree = "<group>"; };
+		6CD890051F0FD0CF00292128 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
+		6CD890071F0FD89B00292128 /* Location.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Location.h; sourceTree = "<group>"; };
+		6CD890081F0FD89B00292128 /* Location.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Location.m; sourceTree = "<group>"; };
 		6CDBE8181F081E9F006DD681 /* Window.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = Window.xib; sourceTree = "<group>"; };
 		6CF1B3BA1F080AFE00060299 /* AirWatchBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AirWatchBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CF1B3BD1F080AFE00060299 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -62,6 +70,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6CD890061F0FD0CF00292128 /* MapKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -82,6 +91,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		6CD890041F0FD0CF00292128 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				6CD890051F0FD0CF00292128 /* MapKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		6CF1B3B11F080AFE00060299 = {
 			isa = PBXGroup;
 			children = (
@@ -89,6 +106,7 @@
 				6CF1B3D31F080AFE00060299 /* AirWatchBuddyTests */,
 				6CF1B3DE1F080AFE00060299 /* AirWatchBuddyUITests */,
 				6CF1B3BB1F080AFE00060299 /* Products */,
+				6CD890041F0FD0CF00292128 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -117,6 +135,10 @@
 				6C7923421F08764B0035EAAA /* ModelValueTransformer.m */,
 				6C7923441F087B0D0035EAAA /* Device.h */,
 				6C7923451F087B0D0035EAAA /* Device.m */,
+				6CD890071F0FD89B00292128 /* Location.h */,
+				6CD890081F0FD89B00292128 /* Location.m */,
+				6CC1F4001F13E9FC00F603BF /* MapAnnotations.h */,
+				6CC1F4011F13E9FC00F603BF /* MapAnnotations.m */,
 			);
 			path = AirWatchBuddy;
 			sourceTree = "<group>";
@@ -284,8 +306,10 @@
 			files = (
 				6CF1B3C21F080AFE00060299 /* main.m in Sources */,
 				6C7923401F0876370035EAAA /* SerialValueTransformer.m in Sources */,
+				6CC1F4021F13E9FC00F603BF /* MapAnnotations.m in Sources */,
 				6CF1B3BF1F080AFE00060299 /* AppDelegate.m in Sources */,
 				6C7923461F087B0D0035EAAA /* Device.m in Sources */,
+				6CD890091F0FD89B00292128 /* Location.m in Sources */,
 				6C7923431F08764B0035EAAA /* ModelValueTransformer.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -8,10 +8,19 @@
 
 #import "AppDelegate.h"
 #import "Device.h"
+#import "Location.h"
+#import "MapAnnotations.h"
 #import <Security/Security.h>
+#import <MapKit/MapKit.h>
 
+#define theSpan 0.30f;
 static NSString *const kServerURIUser = @"/api/mdm/devices/search";
 static NSString *const kServerURIDevices = @"/api/mdm/devices";
+static NSString *const kServerURIGPS = @"/api/mdm/devices/gps";
+static NSString *const kServerURIProfiles = @"/api/mdm/devices/profiles";
+static NSString *const kServerURIApps = @"/api/mdm/devices/apps";
+static NSString *const kServerURISecurity = @"/api/mdm/devices/security";
+static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 
 @interface AppDelegate ()
 - (IBAction)deviceTableView:(id)sender;
@@ -19,6 +28,7 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
 @property (weak) IBOutlet NSWindow *window;
 @property NSArray *devicesArray;
 @property NSArray *deviceTableArray;
+@property NSMutableDictionary *gpsInfo;
 @property (weak) IBOutlet NSTextField *searchValue;
 @property (weak) IBOutlet NSPopUpButtonCell *searchParamater;
 @property (weak) IBOutlet NSPopUpButton *maxDeviceSearch;
@@ -27,9 +37,21 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
 @property (weak) IBOutlet NSTextFieldCell *awTenantCode;
 @property (weak) IBOutlet NSTextFieldCell *userName;
 @property (weak) IBOutlet NSSecureTextFieldCell *password;
+@property (weak) IBOutlet MKMapView *mapView;
+@property (weak) IBOutlet NSWindow *mapWindow;
 - (IBAction)closeCredsSheet:(id)sender;
 - (IBAction)quit:(id)sender;
 - (IBAction)showCredentials:(id)sender;
+- (IBAction)getDeviceLocation:(id)sender;
+- (IBAction)getInstalledProfiles:(id)sender;
+- (IBAction)getInstalledApps:(id)sender;
+- (IBAction)getNetworkInfo:(id)sender;
+- (IBAction)getSecurityInfo:(id)sender;
+- (IBAction)installApplication:(id)sender;
+- (IBAction)closeProfilesSheet:(id)sender;
+@property (weak) IBOutlet NSWindow *profilesWindow;
+
+
 
 @end
 
@@ -117,6 +139,20 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
     NSURLSession *session = [NSURLSession sharedSession];
     [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramter and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
         NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
         
         // Since we are running in a separate thread, we need to return the dict values to the main thread in order to update the GUI
@@ -210,8 +246,22 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
     // Run the query using the URL request and return the JSON code
     NSURLSession *session = [NSURLSession sharedSession];
     [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        //NSLog(@"%@", data);
         if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        NSLog(@"%@", httpResponse);
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramter and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
         NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
         
         // Since we are running in a separate thread, we need to return the dict values to the main thread in order to update the GUI
@@ -253,6 +303,64 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
     return nil;
 }
 
+- (NSDictionary *)deviceLocation:(NSString *)serialNumber {
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = kServerURIGPS;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        NSMutableDictionary *gpsDict = returnedJSON[0];
+        self.gpsInfo = gpsDict;
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+    return nil;
+}
+
 //- (void)tableViewSelectionDidChange:(NSNotification *)notification {
 //    NSInteger tableIndex = [notification.object selectedRow];
 //    dispatch_async(dispatch_get_main_queue(), ^{
@@ -283,11 +391,6 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
         }
     }
 }
-- (void)showCredsWindow {
-    [self.window beginSheet:self.credsWindow completionHandler:^(NSModalResponse returnCode) {
-        return;
-    }];
-}
 
 - (IBAction)closeCredsSheet:(id)sender {
     [self setCredsToKeychainWithUserName:self.userName.stringValue serverURL:self.serverURL.stringValue password:self.password.stringValue awTenantCode:self.awTenantCode.stringValue];
@@ -304,8 +407,414 @@ static NSString *const kServerURIDevices = @"/api/mdm/devices";
     }];
 }
 
+
+- (IBAction)getDeviceLocation:(id)sender {
+    // Get the device's coordinates
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    [self deviceLocation:self.deviceTableArray[selectedRow][@"SerialNumber"]];
+    // NEED TO ADD ERROR HANDLING HERE IN CASE THERE IS NO LOCATION DATA
+    Location *l = [[Location alloc] initWithWindow:self.mapWindow];
+    [l showWindow:self];
+    MKMapView *mapView = self.mapView;
+    mapView.mapType = MKMapTypeStandard;
+    MKCoordinateRegion region;
+    CLLocationCoordinate2D center;
+    center = CLLocationCoordinate2DMake([self.gpsInfo[@"Latitude"] doubleValue], [self.gpsInfo[@"Longitude"] doubleValue]);
+    NSString *lastQueryTime = self.gpsInfo[@"SampleTime"];
+    
+    MKCoordinateSpan span;
+    span.latitudeDelta = theSpan;
+    span.longitudeDelta = theSpan;
+    
+    //[mapView showAnnotations:annotation animated:YES];
+    region.center = center;
+    region.span = span;
+    
+    MapAnnotations *deviceAnnotation = [[MapAnnotations alloc] init];
+    deviceAnnotation.title = @"Last Known Location";
+    deviceAnnotation.subtitle = lastQueryTime;
+    deviceAnnotation.coordinate = center;
+
+    
+    [mapView addAnnotation:deviceAnnotation];
+    [mapView setRegion:region animated:YES];
+
+}
+
+- (IBAction)getInstalledProfiles:(id)sender{
+    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = kServerURIProfiles;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        NSLog(@"%@", returnedJSON);
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+}
+
+- (IBAction)getInstalledApps:(id)sender {
+    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = kServerURIApps;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        NSLog(@"%@", returnedJSON);
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+}
+
+- (IBAction)getNetworkInfo:(id)sender {
+    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = kServerURINetwork;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        NSLog(@"%@", returnedJSON);
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+}
+
+- (IBAction)getSecurityInfo:(id)sender {
+    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = kServerURISecurity;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        NSLog(@"%@", returnedJSON);
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+}
+
+- (NSDictionary *)configuredAPICall:(NSString *)URIPath serialNumber:(NSString *)serialNumber expectedData:(NSString *)expectedData{
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = URIPath;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        if ([expectedData  isEqual: @"dict"]) {
+            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        } else if ([expectedData  isEqual: @"string"]) {
+            NSString *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        } else if ([expectedData  isEqual: @"array"]) {
+            NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        }
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+    return nil;
+}
+
+- (IBAction)installApplication:(id)sender {
+    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = kServerURIProfiles;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        NSLog(@"%@", returnedJSON);
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+}
+
+- (IBAction)closeProfilesSheet:(id)sender {
+    [self.window endSheet:self.profilesWindow];
+}
+
 - (IBAction)deviceTableView:(id)sender {
     NSInteger selectedRow = [self.deviceTableView selectedRow];
+    NSLog(@"Selected Row: %ld", selectedRow);
     NSMutableArray *devicesArray = [NSMutableArray array];
     Device *d = [[Device alloc] init];
     d.deviceModel = self.deviceTableArray[selectedRow][@"Model"];

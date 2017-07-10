@@ -419,7 +419,8 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     mapView.mapType = MKMapTypeStandard;
     MKCoordinateRegion region;
     CLLocationCoordinate2D center;
-    center = CLLocationCoordinate2DMake([self.gpsInfo[@"Latitude"] doubleValue], [self.gpsInfo[@"Longitude"] doubleValue]);
+    //center = CLLocationCoordinate2DMake([self.gpsInfo[@"Latitude"] doubleValue], [self.gpsInfo[@"Longitude"] doubleValue]);
+    center = CLLocationCoordinate2DMake(37.3230, -122.0322);
     NSString *lastQueryTime = self.gpsInfo[@"SampleTime"];
     
     MKCoordinateSpan span;

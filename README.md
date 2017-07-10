@@ -1,6 +1,6 @@
 # AirWatchBuddy
 
-![](AirWatchBuddy.png)
+![](Images/AirWatchBuddy.png)
 
 AirWatchBuddy is a simple API companion app that will pull device information from your AirWatch instance. It was written with the API guide for **AirWatch 9.0** and up, as well as for **macOS 10.12** and up. Older AirWatch instances and versions of OS X have not been tested.
 
@@ -16,6 +16,12 @@ The information can be retrieved using one of 5 queries:
 AirwatchBuddy requires the FQDN or IP address for your AirWatch server, as well as your AW Tenant Code (your API code) and a username and password for an account with API privileges. This information is all stored in the user's default keychain.
 
 AirWatchBuddy also places a preference file on disk under `~/Library/Preferences/com.jbakersystems.AirWatchBuddy` where both the `ServerURL` and `Username` info is kept. These fields are used to key off of and search for your keychain entry to authenticate for the API call.
+
+## Features
+
+* Retrieve Last Known Location of a Device
+
+![](Images/LastKnownLocation.png)
 
 ## Things to do
 

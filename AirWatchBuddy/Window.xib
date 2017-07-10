@@ -1178,7 +1178,6 @@ DQ
         </window>
         <window title="Location Info Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="TnN-J8-0FD">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="746" height="488"/>
             <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
             <value key="minSize" type="size" width="746" height="488"/>

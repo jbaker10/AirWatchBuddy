@@ -7,6 +7,7 @@
 //
 
 #import "Location.h"
+#import "MapAnnotations.h"
 #import <MapKit/MapKit.h>
 
 
@@ -16,8 +17,6 @@
 
 @interface Location ()
 
-@property (weak) IBOutlet MKMapView *mapView;
-
 
 @end
 
@@ -25,6 +24,11 @@
 
 - (void)windowDidLoad {
     [super windowDidLoad];
+    
+    MKMapView *mapView;
+    MapAnnotations *deviceAnnotation = [[MapAnnotations alloc] init];
+    [mapView removeAnnotation:deviceAnnotation];
+    
     // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
 
 }

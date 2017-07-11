@@ -413,6 +413,9 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 
 
 - (NSDictionary *)deviceLocation:(NSString *)serialNumber {
+    // Upon every call we should make sure the gpsInfo is empty
+    NSMutableDictionary *gpsInfo;
+    self.gpsInfo = gpsInfo;
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
     //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
@@ -445,23 +448,40 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
         if (!data) return;
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
         if ([httpResponse statusCode] != 200) {
+            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+            //NSLog(@"%@", returnedJSON);
             dispatch_async(dispatch_get_main_queue(), ^{
                 NSAlert *alert = [[NSAlert alloc] init];
                 [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setMessageText:@"Recieved an error from the server"];
+                [alert setInformativeText:returnedJSON[@"Message"]];
                 [alert setAlertStyle:NSAlertStyleWarning];
                 [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
                     return;
                 }];
             });
+            dispatch_semaphore_signal(sema);
             return;
+        } else {
+            NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+            if ([returnedJSON count] != 0) {
+                self.gpsInfo = returnedJSON[0];
+                dispatch_semaphore_signal(sema);
+            } else {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    NSAlert *alert = [[NSAlert alloc] init];
+                    [alert addButtonWithTitle:@"OK"];
+                    [alert setMessageText:@"No Device Location Information available"];
+                    [alert setInformativeText:@"This device may not have Location Services enabled or has not yet checked in."];
+                    [alert setAlertStyle:NSAlertStyleWarning];
+                    [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                        return;
+                    }];
+                });
+                dispatch_semaphore_signal(sema);
+                return;
+            }
         }
-        NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        NSMutableDictionary *gpsDict = returnedJSON[0];
-        self.gpsInfo = gpsDict;
-        dispatch_semaphore_signal(sema);
-        
     }] resume];
     
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
@@ -519,36 +539,43 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 
 
 - (IBAction)getDeviceLocation:(id)sender {
+    
     // Get the device's coordinates
+    
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     [self deviceLocation:self.deviceTableArray[selectedRow][@"SerialNumber"]];
     // NEED TO ADD ERROR HANDLING HERE IN CASE THERE IS NO LOCATION DATA
-    Location *l = [[Location alloc] initWithWindow:self.mapWindow];
-    [l showWindow:self];
-    MKMapView *mapView = self.mapView;
-    mapView.mapType = MKMapTypeStandard;
-    MKCoordinateRegion region;
-    CLLocationCoordinate2D center;
-    center = CLLocationCoordinate2DMake([self.gpsInfo[@"Latitude"] doubleValue], [self.gpsInfo[@"Longitude"] doubleValue]);
-    NSString *lastQueryTime = self.gpsInfo[@"SampleTime"];
-    
-    MKCoordinateSpan span;
-    span.latitudeDelta = theSpan;
-    span.longitudeDelta = theSpan;
-    
-    //[mapView showAnnotations:annotation animated:YES];
-    region.center = center;
-    region.span = span;
-    
-    MapAnnotations *deviceAnnotation = [[MapAnnotations alloc] init];
-    deviceAnnotation.title = @"Last Known Location";
-    deviceAnnotation.subtitle = lastQueryTime;
-    deviceAnnotation.coordinate = center;
-
-    
-    [mapView addAnnotation:deviceAnnotation];
-    [mapView setRegion:region animated:YES];
-
+    //NSLog(@"%@", self.gpsInfo);
+    if ([self.gpsInfo count] == 0) {
+        return;
+    } else {
+        Location *l = [[Location alloc] initWithWindow:self.mapWindow];
+        [l showWindow:self];
+        MKMapView *mapView = self.mapView;
+        mapView.mapType = MKMapTypeStandard;
+        MKCoordinateRegion region;
+        CLLocationCoordinate2D center;
+        center = CLLocationCoordinate2DMake([self.gpsInfo[@"Latitude"] doubleValue], [self.gpsInfo[@"Longitude"] doubleValue]);
+        NSString *lastQueryTime = self.gpsInfo[@"SampleTime"];
+        
+        MKCoordinateSpan span;
+        span.latitudeDelta = theSpan;
+        span.longitudeDelta = theSpan;
+        
+        //[mapView showAnnotations:annotation animated:YES];
+        region.center = center;
+        region.span = span;
+        
+        MapAnnotations *deviceAnnotation = [[MapAnnotations alloc] init];
+        deviceAnnotation.title = @"Last Known Location";
+        deviceAnnotation.subtitle = lastQueryTime;
+        deviceAnnotation.coordinate = center;
+        
+        // We have to clear the old annotation before adding the new one or we will get multiple pins on the map.
+        
+        [mapView addAnnotation:deviceAnnotation];
+        [mapView setRegion:region animated:YES];
+    }
 }
 
 - (IBAction)getInstalledProfiles:(id)sender{

@@ -23,11 +23,62 @@ static NSString *const kServerURISecurity = @"/api/mdm/devices/security";
 static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 
 @interface AppDelegate ()
+@property (weak) IBOutlet NSWindow *window;
+
+// Device Table Info
 - (IBAction)deviceTableView:(id)sender;
 @property (weak) IBOutlet NSTableView *deviceTableView;
-@property (weak) IBOutlet NSWindow *window;
 @property NSArray *devicesArray;
 @property NSArray *deviceTableArray;
+@property (weak) IBOutlet NSProgressIndicator *progressIndicator;
+
+
+// Profiles Table Info
+@property (weak) IBOutlet NSWindow *profilesWindow;
+@property (weak) IBOutlet NSTableView *profilesTableView;
+@property NSArray *profilesArray;
+@property NSArray *profilesTableArray;
+- (IBAction)profilesTableView:(id)sender;
+
+// Apps Table Info
+@property (weak) IBOutlet NSWindow *appsWindow;
+@property (weak) IBOutlet NSTableView *appsTableView;
+@property NSArray *appsArray;
+@property NSArray *appsTableArray;
+- (IBAction)closeAppsWindow:(id)sender;
+- (IBAction)appsTableView:(id)sender;
+
+// Network Table Info
+@property (weak) IBOutlet NSWindow *networkWindow;
+@property NSArray *networkArray;
+@property NSArray *networkTableArray;
+@property NSString *netWifiIP;
+@property NSString *netWifiMAC;
+@property NSString *netWifiSignal;
+@property NSString *netCellIP;
+@property NSString *netCellNumber;
+@property NSString *netCellCarrier;
+@property NSString *netCellSIMIMEI;
+@property NSString *netCellRoamingStatus;
+@property NSString *netCellDataRoaming;
+@property NSString *netCellVoiceRoaming;
+- (IBAction)closeNetworkWindow:(id)sender;
+
+
+// Security Table Info
+@property (weak) IBOutlet NSWindow *securityWindow;
+@property NSArray *securityArray;
+@property NSArray *securityTableArray;
+@property NSString *secIsCompromised;
+@property NSString *secDataProtectionEnabled;
+@property NSString *secBlockLevelEncryption;
+@property NSString *secFileLevelEncryption;
+@property NSString *secIsPasscodePresent;
+@property NSString *secIsPasscodeCompliant;
+- (IBAction)closeSecWindow:(id)sender;
+
+
+
 @property NSMutableDictionary *gpsInfo;
 @property (weak) IBOutlet NSTextField *searchValue;
 @property (weak) IBOutlet NSPopUpButtonCell *searchParamater;
@@ -49,9 +100,6 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 - (IBAction)getSecurityInfo:(id)sender;
 - (IBAction)installApplication:(id)sender;
 - (IBAction)closeProfilesSheet:(id)sender;
-@property (weak) IBOutlet NSWindow *profilesWindow;
-
-
 
 @end
 
@@ -187,37 +235,10 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
                 [devicesArray addObject:d];
             }
             self.devicesArray = devicesArray;
+            [self.progressIndicator stopAnimation:self];
             [self.deviceTableView reloadData];
         });
     }] resume];
-    return nil;
-}
-
-- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
-    return [self.deviceTableArray count];
-}
-
-
-- (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
-    //NSLog(@"In the Table view function now.");
-    NSDictionary *device = self.deviceTableArray[row];
-    NSString *identifier = [tableColumn identifier];
-    //NSLog(@"%@", device);
-    if ([identifier isEqualToString:@"user_column"]) {
-        NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"user_column" owner:self];
-        [cellView.textField setStringValue:device[@"UserEmailAddress"]];
-        return cellView;
-    }
-    if ([identifier isEqualToString:@"serial_number_column"]) {
-        NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"serial_number_column" owner:self];
-        [cellView.textField setStringValue:device[@"SerialNumber"]];
-        return cellView;
-    }
-    if ([identifier isEqualToString:@"model_column"]) {
-        NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"model_column" owner:self];
-        [cellView.textField setStringValue:device[@"Model"]];
-        return cellView;
-    }
     return nil;
 }
 
@@ -228,7 +249,7 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     NSURLQueryItem *userQuery = [NSURLQueryItem queryItemWithName:@"searchby" value:self.searchParamater.selectedItem.title];
     NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"id" value:self.searchValue.stringValue];
     airWatchURLComponents.queryItems = @[ userQuery, pageSize ];
-
+    
     // Create the base64 encoded authentication
     NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
     NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
@@ -269,7 +290,7 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
             NSDictionary *device;
             NSMutableArray *devicesArray = [NSMutableArray array];
             NSMutableArray *deviceTableArray = [NSMutableArray arrayWithObject:returnedJSON];
-
+            
             device = returnedJSON;
             Device *d = [[Device alloc] init];
             d.deviceModel = device[@"Model"];
@@ -297,11 +318,99 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
             [devicesArray addObject:d];
             self.devicesArray = devicesArray;
             self.deviceTableArray = deviceTableArray;
+            [self.progressIndicator stopAnimation:self];
             [self.deviceTableView reloadData];
         });
     }] resume];
     return nil;
 }
+
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
+    NSString *tableViewIdentifier = [tableView identifier];
+    if ([tableViewIdentifier isEqualToString:@"profiles_table"]) {
+        //NSLog(@"Profiles array count: %ld", [self.appsTableArray count]);
+        return [self.profilesTableArray count];
+    } else if ([tableViewIdentifier isEqualToString:@"apps_table"]) {
+        //NSLog(@"Apps array count: %ld", [self.appsTableArray count]);
+        return [self.appsTableArray count];
+    } else {
+        return [self.deviceTableArray count];
+    }
+}
+
+- (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+    NSString *identifier = [tableColumn identifier];
+    NSString *tableViewIdentifier = [tableView identifier];
+    //NSLog(@"%@", tableViewIdentifier);
+    if ([tableViewIdentifier isEqualToString:@"profiles_table"]) {
+        NSDictionary *profile = self.profilesTableArray[row];
+        //NSLog(@"Working with the profile table view");
+        if ([identifier isEqualToString:@"profile_name_column"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"profile_name_column" owner:self];
+            [cellView.textField setStringValue:profile[@"Name"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"profile_description_column"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"profile_description_column" owner:self];
+            [cellView.textField setStringValue:profile[@"Description"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"profile_version_column"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"profile_version_column" owner:self];
+            [cellView.textField setStringValue:profile[@"CurrentVersion"]];
+            return cellView;
+        }
+    } else if ([tableViewIdentifier isEqualToString:@"apps_table"]) {
+        NSDictionary *app = self.appsTableArray[row];
+        //NSLog(@"Working with the apps table view");
+        if ([identifier isEqualToString:@"bundle_identifier"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"bundle_identifier" owner:self];
+            [cellView.textField setStringValue:app[@"ApplicationIdentifier"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"application_name"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"application_name" owner:self];
+            [cellView.textField setStringValue:app[@"ApplicationName"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"version"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"version" owner:self];
+            [cellView.textField setStringValue:app[@"Version"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"type"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"type" owner:self];
+            [cellView.textField setStringValue:app[@"Type"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"is_managed"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"is_managed" owner:self];
+            [cellView.textField setStringValue:app[@"IsManaged"]];
+            return cellView;
+        }
+    } else {
+        //NSLog(@"Working with the device table view");
+        NSDictionary *device = self.deviceTableArray[row];
+        if ([identifier isEqualToString:@"user_column"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"user_column" owner:self];
+            [cellView.textField setStringValue:device[@"UserEmailAddress"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"serial_number_column"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"serial_number_column" owner:self];
+            [cellView.textField setStringValue:device[@"SerialNumber"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"model_column"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"model_column" owner:self];
+            [cellView.textField setStringValue:device[@"Model"]];
+            return cellView;
+        }
+    }
+    //NSLog(@"%@", device);
+    return nil;
+}
+
 
 - (NSDictionary *)deviceLocation:(NSString *)serialNumber {
     // Create the URL request with the hostname and search URI's
@@ -374,6 +483,7 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 }
 
 - (IBAction)searchButton:(id)sender {
+    [self.progressIndicator startAnimation:self];
     if ([self.searchParamater.selectedItem.title isEqualToString:@"UserName"]) {
         [self userDeviceDetails];
     } else {
@@ -442,9 +552,6 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 }
 
 - (IBAction)getInstalledProfiles:(id)sender{
-    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
-        return;
-    }];
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
     // Create the URL request with the hostname and search URI's
@@ -468,8 +575,7 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
     [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
     URLRequest.HTTPMethod = @"GET";
-    
-    // Create the semaphore
+
     
     dispatch_semaphore_t sema = dispatch_semaphore_create(0);
     // Run the query using the URL request and return the JSON
@@ -492,20 +598,27 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
             return;
         }
         NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        NSLog(@"%@", returnedJSON);
+        //NSLog(@"%@", returnedJSON);
+        // Since we are running in a separate thread, we need to return the dict values to the main thread in order to update the GUI
+        NSMutableArray *profilesArray = [NSMutableArray array];
+        profilesArray = returnedJSON[@"DeviceProfiles"];
+        NSArray *descriptor = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"Name" ascending:YES]];
+        NSArray *sortedProfiles = [profilesArray sortedArrayUsingDescriptors:descriptor];
+        self.profilesTableArray = sortedProfiles;
+        [self.profilesTableView reloadData];
         dispatch_semaphore_signal(sema);
-        
     }] resume];
-    
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
-}
-
-- (IBAction)getInstalledApps:(id)sender {
     [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
         return;
     }];
+}
+
+
+
+- (IBAction)getInstalledApps:(id)sender {
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
     // Create the URL request with the hostname and search URI's
@@ -553,20 +666,27 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
             return;
         }
         NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        NSLog(@"%@", returnedJSON);
+        //NSLog(@"%@", returnedJSON);
+        NSMutableArray *appsArray = [NSMutableArray array];
+        appsArray = returnedJSON[@"DeviceApps"];
+        NSArray *descriptor = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"ApplicationName" ascending:YES]];
+        NSArray *sortedApps = [appsArray sortedArrayUsingDescriptors:descriptor];
+        self.appsTableArray = sortedApps;
+        [self.appsTableView reloadData];
         dispatch_semaphore_signal(sema);
-        
+        //}
+        [self.window beginSheet:self.appsWindow completionHandler:^(NSModalResponse returnCode) {
+            return;
+        }];
     }] resume];
     
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
+
 }
 
 - (IBAction)getNetworkInfo:(id)sender {
-    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
-        return;
-    }];
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
     // Create the URL request with the hostname and search URI's
@@ -614,20 +734,43 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
             return;
         }
         NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        NSLog(@"%@", returnedJSON);
+        //NSLog(@"%@", returnedJSON);
+        self.netWifiIP = returnedJSON[@"IPAddress"][@"WifiIPAddress"];
+        self.netWifiMAC = returnedJSON[@"WifiInfo"][@"WifiMacAddress"];
+        self.netWifiSignal = returnedJSON[@"WifiInfo"][@"SignalStrength"];
+        self.netCellIP = returnedJSON[@"IPAddress"][@"CellularIPAddress"];
+        self.netCellNumber = returnedJSON[@"PhoneNumber"];
+        self.netCellCarrier = returnedJSON[@"CellularNetworkInfo"][@"CurrentOperator"];
+        self.netCellSIMIMEI = returnedJSON[@"CellularNetworkInfo"][@"CurrentSIM"];
+        if ([returnedJSON[@"RoamingStatus"] boolValue]) {
+            self.netCellRoamingStatus = @"True";
+        } else {
+            self.netCellRoamingStatus = @"False";
+        }
+        if ([returnedJSON[@"DataRoamingEnabled"] boolValue]) {
+            self.netCellDataRoaming = @"True";
+        } else {
+            self.netCellDataRoaming = @"False";
+        }
+        if ([returnedJSON[@"VoiceRoamingEnabled"] boolValue]) {
+            self.netCellVoiceRoaming = @"True";
+        } else {
+            self.netCellVoiceRoaming = @"False";
+        }
         dispatch_semaphore_signal(sema);
+        //}
         
     }] resume];
     
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
+    [self.window beginSheet:self.networkWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
 }
 
 - (IBAction)getSecurityInfo:(id)sender {
-    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
-        return;
-    }];
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
     // Create the URL request with the hostname and search URI's
@@ -675,7 +818,42 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
             return;
         }
         NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        NSLog(@"%@", returnedJSON);
+        if ([returnedJSON[@"IsCompromised"] boolValue]) {
+            self.secIsCompromised = @"True";
+        } else {
+            self.secIsCompromised = @"False";
+        }
+        if ([returnedJSON[@"DataProtectionEnabled"] boolValue]) {
+            self.secDataProtectionEnabled = @"True";
+        } else {
+            self.secDataProtectionEnabled = @"False";
+        }
+        if ([returnedJSON[@"BlockLevelEncryption"] boolValue]) {
+            self.secBlockLevelEncryption = @"True";
+        } else {
+            self.secBlockLevelEncryption = @"False";
+        }
+        if ([returnedJSON[@"FileLevelEncryption"] boolValue]) {
+            self.secFileLevelEncryption = @"True";
+        } else {
+            self.secFileLevelEncryption = @"False";
+        }
+        if ([returnedJSON[@"IsPasscodePresent"] boolValue]) {
+            self.secIsPasscodePresent = @"True";
+        } else {
+            self.secIsPasscodePresent = @"False";
+        }
+        if ([returnedJSON[@"IsPasscodeCompliant"] boolValue]) {
+            self.secIsPasscodeCompliant = @"True";
+        } else {
+            self.secIsPasscodeCompliant = @"False";
+        }
+        //self.secIsCompromised = returnedJSON[@"IsCompromised"];
+//        self.secDataProtectionEnabled = returnedJSON[@"DataProtectionEnabled"];
+//        self.secBlockLevelEncryption = returnedJSON[@"BlockLevelEncryption"];
+//        self.secFileLevelEncryption = returnedJSON[@"FileLevelEncryption"];
+//        self.secIsPasscodePresent = returnedJSON[@"IsPasscodePresent"];
+//        self.secIsPasscodeCompliant = returnedJSON[@"IsPasscodeCompliant"];
         dispatch_semaphore_signal(sema);
         
     }] resume];
@@ -683,129 +861,75 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
-}
-
-- (NSDictionary *)configuredAPICall:(NSString *)URIPath serialNumber:(NSString *)serialNumber expectedData:(NSString *)expectedData{
-    // Create the URL request with the hostname and search URI's
-    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
-    airWatchURLComponents.path = URIPath;
-    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
-    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
-    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
-    
-    // Create the base64 encoded authentication
-    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
-    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
-    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
-    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
-    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
-    
-    // Complete the URL request and add-in headers
-    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
-    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
-    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
-    URLRequest.HTTPMethod = @"GET";
-    
-    // Create the semaphore
-    
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    // Run the query using the URL request and return the JSON
-    NSURLSession *session = [NSURLSession sharedSession];
-    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        
-        if (!data) return;
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-        if ([httpResponse statusCode] != 200) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSAlert *alert = [[NSAlert alloc] init];
-                [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
-                [alert setAlertStyle:NSAlertStyleWarning];
-                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                    return;
-                }];
-            });
-            return;
-        }
-        if ([expectedData  isEqual: @"dict"]) {
-            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        } else if ([expectedData  isEqual: @"string"]) {
-            NSString *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        } else if ([expectedData  isEqual: @"array"]) {
-            NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        }
-        dispatch_semaphore_signal(sema);
-        
-    }] resume];
-    
-    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
-        NSLog(@"Timeout");
-    }
-    return nil;
-}
-
-- (IBAction)installApplication:(id)sender {
-    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
+    [self.window beginSheet:self.securityWindow completionHandler:^(NSModalResponse returnCode) {
         return;
     }];
-    NSInteger selectedRow = [self.deviceTableView selectedRow];
-    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
-    // Create the URL request with the hostname and search URI's
-    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
-    airWatchURLComponents.path = kServerURIProfiles;
-    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
-    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
-    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+}
+
+//- (NSDictionary *)makeAPICall:(NSString *)URIPath serialNumber:(NSString *)serialNumber expectedData:(NSString *)expectedData{
+//    // Create the URL request with the hostname and search URI's
+//    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+//    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+//    airWatchURLComponents.path = URIPath;
+//    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+//    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+//    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+//    
+//    // Create the base64 encoded authentication
+//    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+//    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+//    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+//    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+//    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+//    
+//    // Complete the URL request and add-in headers
+//    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+//    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+//    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+//    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+//    URLRequest.HTTPMethod = @"GET";
+//    
+//    // Create the semaphore
+//    
+//    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+//    // Run the query using the URL request and return the JSON
+//    NSURLSession *session = [NSURLSession sharedSession];
+//    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+//        
+//        if (!data) return;
+//        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+//        if ([httpResponse statusCode] != 200) {
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                NSAlert *alert = [[NSAlert alloc] init];
+//                [alert addButtonWithTitle:@"OK"];
+//                [alert setMessageText:@"Received a bad response from the server."];
+//                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+//                [alert setAlertStyle:NSAlertStyleWarning];
+//                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+//                    return;
+//                }];
+//            });
+//            return;
+//        }
+//        if ([expectedData isEqual: @"dict"]) {
+//            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+//        } else if ([expectedData  isEqual: @"string"]) {
+//            NSString *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+//        } else if ([expectedData  isEqual: @"array"]) {
+//            NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+//        }
+//        dispatch_semaphore_signal(sema);
+//        
+//    }] resume];
+//    
+//    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+//        NSLog(@"Timeout");
+//    }
+//    return nil;
+//}
+
+- (IBAction)installApplication:(id)sender {
     
-    // Create the base64 encoded authentication
-    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
-    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
-    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
-    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
-    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
-    
-    // Complete the URL request and add-in headers
-    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
-    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
-    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
-    URLRequest.HTTPMethod = @"GET";
-    
-    // Create the semaphore
-    
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    // Run the query using the URL request and return the JSON
-    NSURLSession *session = [NSURLSession sharedSession];
-    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        
-        if (!data) return;
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-        if ([httpResponse statusCode] != 200) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSAlert *alert = [[NSAlert alloc] init];
-                [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
-                [alert setAlertStyle:NSAlertStyleWarning];
-                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                    return;
-                }];
-            });
-            return;
-        }
-        NSArray *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        NSLog(@"%@", returnedJSON);
-        dispatch_semaphore_signal(sema);
-        
-    }] resume];
-    
-    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
-        NSLog(@"Timeout");
-    }
 }
 
 - (IBAction)closeProfilesSheet:(id)sender {
@@ -814,7 +938,7 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 
 - (IBAction)deviceTableView:(id)sender {
     NSInteger selectedRow = [self.deviceTableView selectedRow];
-    NSLog(@"Selected Row: %ld", selectedRow);
+    //NSLog(@"Selected Row: %ld", selectedRow);
     NSMutableArray *devicesArray = [NSMutableArray array];
     Device *d = [[Device alloc] init];
     d.deviceModel = self.deviceTableArray[selectedRow][@"Model"];
@@ -841,5 +965,24 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     d.deviceUDID = self.deviceTableArray[selectedRow][@"Udid"];
     [devicesArray addObject:d];
     self.devicesArray = devicesArray;
+}
+- (IBAction)profilesTableView:(id)sender {
+    NSInteger selectedRow = [self.profilesTableView selectedRow];
+    //NSLog(@"Selected Row: %ld", selectedRow);
+}
+
+- (IBAction)closeAppsWindow:(id)sender {
+    [self.window endSheet:self.appsWindow];
+}
+
+- (IBAction)appsTableView:(id)sender {
+    NSInteger selectedRow = [self.appsTableView selectedRow];
+    //NSLog(@"Selected Row: %ld", selectedRow);
+}
+- (IBAction)closeSecWindow:(id)sender {
+    [self.window endSheet:self.securityWindow];
+}
+- (IBAction)closeNetworkWindow:(id)sender {
+    [self.window endSheet:self.networkWindow];
 }
 @end

@@ -236,7 +236,7 @@
 				TargetAttributes = {
 					6CF1B3B91F080AFE00060299 = {
 						CreatedOnToolsVersion = 8.3.3;
-						DevelopmentTeam = B8YRAMS454;
+						DevelopmentTeam = 96XS3F8E8M;
 						ProvisioningStyle = Automatic;
 					};
 					6CF1B3CF1F080AFE00060299 = {
@@ -441,25 +441,29 @@
 		6CF1B3E51F080AFE00060299 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = B8YRAMS454;
+				DEVELOPMENT_TEAM = 96XS3F8E8M;
 				INFOPLIST_FILE = AirWatchBuddy/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Debug;
 		};
 		6CF1B3E61F080AFE00060299 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = B8YRAMS454;
+				DEVELOPMENT_TEAM = 96XS3F8E8M;
 				INFOPLIST_FILE = AirWatchBuddy/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.jbakersystems.AirWatchBuddy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
 			name = Release;
 		};

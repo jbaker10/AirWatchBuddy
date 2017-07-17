@@ -21,6 +21,10 @@ static NSString *const kServerURIProfiles = @"/api/mdm/devices/profiles";
 static NSString *const kServerURIApps = @"/api/mdm/devices/apps";
 static NSString *const kServerURISecurity = @"/api/mdm/devices/security";
 static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
+static NSString *const kServerPublicApps = @"/api/mam/apps/internal";
+static NSString *const kServerInternalApps = @"/api/mam/apps/public";
+static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
+
 
 @interface AppDelegate ()
 @property (weak) IBOutlet NSWindow *window;
@@ -36,14 +40,14 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 // Profiles Table Info
 @property (weak) IBOutlet NSWindow *profilesWindow;
 @property (weak) IBOutlet NSTableView *profilesTableView;
-@property NSArray *profilesArray;
+//@property NSArray *profilesArray;
 @property NSArray *profilesTableArray;
 - (IBAction)profilesTableView:(id)sender;
 
 // Apps Table Info
 @property (weak) IBOutlet NSWindow *appsWindow;
 @property (weak) IBOutlet NSTableView *appsTableView;
-@property NSArray *appsArray;
+//@property NSArray *appsArray;
 @property NSArray *appsTableArray;
 - (IBAction)closeAppsWindow:(id)sender;
 - (IBAction)appsTableView:(id)sender;
@@ -65,6 +69,8 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 - (IBAction)closeNetworkWindow:(id)sender;
 
 
+
+
 // Security Table Info
 @property (weak) IBOutlet NSWindow *securityWindow;
 @property NSArray *securityArray;
@@ -76,6 +82,7 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 @property NSString *secIsPasscodePresent;
 @property NSString *secIsPasscodeCompliant;
 - (IBAction)closeSecWindow:(id)sender;
+
 
 
 
@@ -189,11 +196,13 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
         if (!data) return;
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
         if ([httpResponse statusCode] != 200) {
+            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             dispatch_async(dispatch_get_main_queue(), ^{
+                [self.progressIndicator stopAnimation:self];
                 NSAlert *alert = [[NSAlert alloc] init];
                 [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramter and value."];
+                [alert setMessageText:@"Recieved an error from the server"];
+                [alert setInformativeText:returnedJSON[@"Message"]];
                 [alert setAlertStyle:NSAlertStyleWarning];
                 [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
                     return;
@@ -271,11 +280,13 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
         NSLog(@"%@", httpResponse);
         if ([httpResponse statusCode] != 200) {
+            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             dispatch_async(dispatch_get_main_queue(), ^{
+                [self.progressIndicator stopAnimation:self];
                 NSAlert *alert = [[NSAlert alloc] init];
                 [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramter and value."];
+                [alert setMessageText:@"Recieved an error from the server"];
+                [alert setInformativeText:returnedJSON[@"Message"]];
                 [alert setAlertStyle:NSAlertStyleWarning];
                 [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
                     return;
@@ -490,18 +501,6 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     return nil;
 }
 
-//- (void)tableViewSelectionDidChange:(NSNotification *)notification {
-//    NSInteger tableIndex = [notification.object selectedRow];
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        self.deviceOS = self.devicesArray[tableIndex][@"OperatingSystem"];
-//    });
-//    
-//}
-
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
-    // Insert code here to tear down your application
-}
-
 - (IBAction)searchButton:(id)sender {
     [self.progressIndicator startAnimation:self];
     if ([self.searchParamater.selectedItem.title isEqualToString:@"UserName"]) {
@@ -638,9 +637,11 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
-    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
-        return;
-    }];
+    NSWindowController *profilesWindow = [[NSWindowController alloc] initWithWindow:self.profilesWindow];
+    [profilesWindow showWindow:self];
+//    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
+//        return;
+//    }];
 }
 
 
@@ -701,15 +702,13 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
         self.appsTableArray = sortedApps;
         [self.appsTableView reloadData];
         dispatch_semaphore_signal(sema);
-        //}
-        [self.window beginSheet:self.appsWindow completionHandler:^(NSModalResponse returnCode) {
-            return;
-        }];
     }] resume];
     
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
+    NSWindowController *appsWindow = [[NSWindowController alloc] initWithWindow:self.appsWindow];
+    [appsWindow showWindow:self];
 
 }
 
@@ -785,13 +784,14 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
             self.netCellVoiceRoaming = @"False";
         }
         dispatch_semaphore_signal(sema);
-        //}
         
     }] resume];
     
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
+//    NSWindowController *networkWindow = [[NSWindowController alloc] initWithWindow:self.networkWindow];
+//    [networkWindow showWindow:self];
     [self.window beginSheet:self.networkWindow completionHandler:^(NSModalResponse returnCode) {
         return;
     }];
@@ -875,12 +875,6 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
         } else {
             self.secIsPasscodeCompliant = @"False";
         }
-        //self.secIsCompromised = returnedJSON[@"IsCompromised"];
-//        self.secDataProtectionEnabled = returnedJSON[@"DataProtectionEnabled"];
-//        self.secBlockLevelEncryption = returnedJSON[@"BlockLevelEncryption"];
-//        self.secFileLevelEncryption = returnedJSON[@"FileLevelEncryption"];
-//        self.secIsPasscodePresent = returnedJSON[@"IsPasscodePresent"];
-//        self.secIsPasscodeCompliant = returnedJSON[@"IsPasscodeCompliant"];
         dispatch_semaphore_signal(sema);
         
     }] resume];
@@ -888,12 +882,14 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
+//    NSWindowController *securityWindow = [[NSWindowController alloc] initWithWindow:self.securityWindow];
+//    [securityWindow showWindow:self];
     [self.window beginSheet:self.securityWindow completionHandler:^(NSModalResponse returnCode) {
         return;
     }];
 }
 
-//- (NSDictionary *)makeAPICall:(NSString *)URIPath serialNumber:(NSString *)serialNumber expectedData:(NSString *)expectedData{
+//- (NSDictionary *)makeGetRequest:(NSString *)URIPath serialNumber:(NSString *)serialNumber expectedData:(NSString *)expectedData{
 //    // Create the URL request with the hostname and search URI's
 //    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
 //    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
@@ -955,12 +951,66 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 //    return nil;
 //}
 
-- (IBAction)installApplication:(id)sender {
-    
+
+- (NSDictionary *)makePostRequest:(NSString *)URIPath serialNumber:(NSString *)serialNumber postData:(NSDictionary *)postData{
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
+    airWatchURLComponents.path = URIPath;
+    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
+    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"POST";
+
+    // Create the semaphore
+
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        dispatch_semaphore_signal(sema);
+
+    }] resume];
+
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+    return nil;
 }
 
-- (IBAction)closeProfilesSheet:(id)sender {
-    [self.window endSheet:self.profilesWindow];
+
+
+- (IBAction)installApplication:(id)sender {
+    
 }
 
 - (IBAction)deviceTableView:(id)sender {
@@ -998,14 +1048,16 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
     //NSLog(@"Selected Row: %ld", selectedRow);
 }
 
-- (IBAction)closeAppsWindow:(id)sender {
-    [self.window endSheet:self.appsWindow];
-}
 
 - (IBAction)appsTableView:(id)sender {
     NSInteger selectedRow = [self.appsTableView selectedRow];
     //NSLog(@"Selected Row: %ld", selectedRow);
 }
+
+- (void)applicationWillTerminate:(NSNotification *)aNotification {
+    // Insert code here to tear down your application
+}
+
 - (IBAction)closeSecWindow:(id)sender {
     [self.window endSheet:self.securityWindow];
 }

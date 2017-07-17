@@ -24,6 +24,7 @@ static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 static NSString *const kServerPublicApps = @"/api/mam/apps/internal";
 static NSString *const kServerInternalApps = @"/api/mam/apps/public";
 static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
+static NSString *const kServerAllApps = @"/api/mam/apps/search";
 
 
 @interface AppDelegate ()
@@ -40,16 +41,13 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
 // Profiles Table Info
 @property (weak) IBOutlet NSWindow *profilesWindow;
 @property (weak) IBOutlet NSTableView *profilesTableView;
-//@property NSArray *profilesArray;
 @property NSArray *profilesTableArray;
 - (IBAction)profilesTableView:(id)sender;
 
 // Apps Table Info
 @property (weak) IBOutlet NSWindow *appsWindow;
 @property (weak) IBOutlet NSTableView *appsTableView;
-//@property NSArray *appsArray;
 @property NSArray *appsTableArray;
-- (IBAction)closeAppsWindow:(id)sender;
 - (IBAction)appsTableView:(id)sender;
 
 // Network Table Info
@@ -68,9 +66,6 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
 @property NSString *netCellVoiceRoaming;
 - (IBAction)closeNetworkWindow:(id)sender;
 
-
-
-
 // Security Table Info
 @property (weak) IBOutlet NSWindow *securityWindow;
 @property NSArray *securityArray;
@@ -84,9 +79,17 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
 - (IBAction)closeSecWindow:(id)sender;
 
 
-
-
+// Location Window info
 @property NSMutableDictionary *gpsInfo;
+
+// App Install Window
+@property (weak) IBOutlet NSWindow *availableApps;
+@property (weak) IBOutlet NSTableView *installAppsTable;
+@property NSArray *installAppsTableArray;
+- (IBAction)installAppsTable:(id)sender;
+- (IBAction)installApp:(id)sender;
+
+
 @property (weak) IBOutlet NSTextField *searchValue;
 @property (weak) IBOutlet NSPopUpButtonCell *searchParamater;
 @property (weak) IBOutlet NSPopUpButton *maxDeviceSearch;
@@ -106,7 +109,6 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
 - (IBAction)getNetworkInfo:(id)sender;
 - (IBAction)getSecurityInfo:(id)sender;
 - (IBAction)installApplication:(id)sender;
-- (IBAction)closeProfilesSheet:(id)sender;
 
 @end
 
@@ -166,6 +168,20 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     return [creds componentsSeparatedByString:@"\n"];
 }
 
+
+// Show the Credentials sheet
+- (IBAction)showCredentials:(id)sender {
+    [self.window beginSheet:self.credsWindow completionHandler:^(NSModalResponse returnCode) {
+        return;
+    }];
+}
+
+// Close the Credentials sheet
+- (IBAction)closeCredsSheet:(id)sender {
+    [self setCredsToKeychainWithUserName:self.userName.stringValue serverURL:self.serverURL.stringValue password:self.password.stringValue awTenantCode:self.awTenantCode.stringValue];
+    [self.window endSheet:self.credsWindow];
+}
+
 // This method below will be run if the 'UserName' field is selected as the search paramater
 - (NSDictionary *)userDeviceDetails {
     // Create the URL request with the hostname and search URI's
@@ -197,12 +213,18 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
         if ([httpResponse statusCode] != 200) {
             NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+            NSString *errorMessage;
+            if (!returnedJSON[@"Message"]) {
+                errorMessage = @"Something went wrong.";
+            } else {
+                errorMessage = returnedJSON[@"Message"];
+            }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.progressIndicator stopAnimation:self];
                 NSAlert *alert = [[NSAlert alloc] init];
                 [alert addButtonWithTitle:@"OK"];
                 [alert setMessageText:@"Recieved an error from the server"];
-                [alert setInformativeText:returnedJSON[@"Message"]];
+                [alert setInformativeText:errorMessage];
                 [alert setAlertStyle:NSAlertStyleWarning];
                 [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
                     return;
@@ -336,6 +358,26 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     return nil;
 }
 
+- (IBAction)searchButton:(id)sender {
+    [self.progressIndicator startAnimation:self];
+    if ([self.searchParamater.selectedItem.title isEqualToString:@"UserName"]) {
+        [self userDeviceDetails];
+    } else {
+        if (self.searchValue.stringValue.length == 0) {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert addButtonWithTitle:@"OK"];
+            [alert setMessageText:@"No device info given!"];
+            [alert setInformativeText:@"Please enter a value to search on that corresponds to the search paramater chosen."];
+            [alert setAlertStyle:NSAlertStyleWarning];
+            [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                return;
+            }];
+        } else {
+            [self deviceDetails];
+        }
+    }
+}
+
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
     NSString *tableViewIdentifier = [tableView identifier];
     if ([tableViewIdentifier isEqualToString:@"profiles_table"]) {
@@ -344,12 +386,16 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     } else if ([tableViewIdentifier isEqualToString:@"apps_table"]) {
         //NSLog(@"Apps array count: %ld", [self.appsTableArray count]);
         return [self.appsTableArray count];
+    } else if ([tableViewIdentifier isEqualToString:@"install_apps_table"]) {
+        //NSLog(@"Apps array count: %ld", [self.installAppsTableArray count]);
+        return [self.installAppsTableArray count];
     } else {
         return [self.deviceTableArray count];
     }
 }
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
+    NSLog(@"In the table view function");
     NSString *identifier = [tableColumn identifier];
     NSString *tableViewIdentifier = [tableView identifier];
     //NSLog(@"%@", tableViewIdentifier);
@@ -374,14 +420,14 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     } else if ([tableViewIdentifier isEqualToString:@"apps_table"]) {
         NSDictionary *app = self.appsTableArray[row];
         //NSLog(@"Working with the apps table view");
-        if ([identifier isEqualToString:@"bundle_identifier"]) {
-            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"bundle_identifier" owner:self];
-            [cellView.textField setStringValue:app[@"ApplicationIdentifier"]];
-            return cellView;
-        }
         if ([identifier isEqualToString:@"application_name"]) {
             NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"application_name" owner:self];
             [cellView.textField setStringValue:app[@"ApplicationName"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"bundle_identifier"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"bundle_identifier" owner:self];
+            [cellView.textField setStringValue:app[@"ApplicationIdentifier"]];
             return cellView;
         }
         if ([identifier isEqualToString:@"version"]) {
@@ -397,6 +443,25 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
         if ([identifier isEqualToString:@"is_managed"]) {
             NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"is_managed" owner:self];
             [cellView.textField setStringValue:app[@"IsManaged"]];
+            return cellView;
+        }
+    } else if ([tableViewIdentifier isEqualToString:@"install_apps_table"]) {
+        NSDictionary *app = self.installAppsTableArray[row];
+        NSLog(@"Working with the install apps table view");
+        
+        if ([identifier isEqualToString:@"application_name"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"application_name" owner:self];
+            [cellView.textField setStringValue:app[@"ApplicationName"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"bundle_identifier"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"bundle_identifier" owner:self];
+            [cellView.textField setStringValue:app[@"BundleId"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"type"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"type" owner:self];
+            [cellView.textField setStringValue:app[@"AppType"]];
             return cellView;
         }
     } else {
@@ -421,7 +486,6 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     //NSLog(@"%@", device);
     return nil;
 }
-
 
 - (NSDictionary *)deviceLocation:(NSString *)serialNumber {
     // Upon every call we should make sure the gpsInfo is empty
@@ -500,42 +564,6 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     }
     return nil;
 }
-
-- (IBAction)searchButton:(id)sender {
-    [self.progressIndicator startAnimation:self];
-    if ([self.searchParamater.selectedItem.title isEqualToString:@"UserName"]) {
-        [self userDeviceDetails];
-    } else {
-        if (self.searchValue.stringValue.length == 0) {
-            NSAlert *alert = [[NSAlert alloc] init];
-            [alert addButtonWithTitle:@"OK"];
-            [alert setMessageText:@"No device info given!"];
-            [alert setInformativeText:@"Please enter a value to search on that corresponds to the search paramater chosen."];
-            [alert setAlertStyle:NSAlertStyleWarning];
-            [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                return;
-            }];
-        } else {
-            [self deviceDetails];
-        }
-    }
-}
-
-- (IBAction)closeCredsSheet:(id)sender {
-    [self setCredsToKeychainWithUserName:self.userName.stringValue serverURL:self.serverURL.stringValue password:self.password.stringValue awTenantCode:self.awTenantCode.stringValue];
-    [self.window endSheet:self.credsWindow];
-}
-
-- (IBAction)quit:(id)sender {
-    [NSApp terminate:self];
-}
-
-- (IBAction)showCredentials:(id)sender {
-    [self.window beginSheet:self.credsWindow completionHandler:^(NSModalResponse returnCode) {
-        return;
-    }];
-}
-
 
 - (IBAction)getDeviceLocation:(id)sender {
     
@@ -639,12 +667,7 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     }
     NSWindowController *profilesWindow = [[NSWindowController alloc] initWithWindow:self.profilesWindow];
     [profilesWindow showWindow:self];
-//    [self.window beginSheet:self.profilesWindow completionHandler:^(NSModalResponse returnCode) {
-//        return;
-//    }];
 }
-
-
 
 - (IBAction)getInstalledApps:(id)sender {
     NSInteger selectedRow = [self.deviceTableView selectedRow];
@@ -1007,10 +1030,64 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     return nil;
 }
 
-
-
 - (IBAction)installApplication:(id)sender {
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents;
+    airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    airWatchURLComponents.path = kServerAllApps;
+    NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"pagesize" value:@"500"];
+    airWatchURLComponents.queryItems = @[ pageSize ];
     
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    URLRequest.HTTPMethod = @"GET";
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+        //NSLog(@"%@", returnedJSON);
+        NSMutableArray *appsArray = [NSMutableArray array];
+        appsArray = returnedJSON[@"Application"];
+        NSArray *descriptor = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"ApplicationName" ascending:YES]];
+        NSArray *sortedApps = [appsArray sortedArrayUsingDescriptors:descriptor];
+        self.installAppsTableArray = sortedApps;
+        [self.installAppsTable reloadData];
+        dispatch_semaphore_signal(sema);
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+    NSWindowController *availableApps = [[NSWindowController alloc] initWithWindow:self.availableApps];
+    [availableApps showWindow:self];
 }
 
 - (IBAction)deviceTableView:(id)sender {
@@ -1054,14 +1131,24 @@ static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
     //NSLog(@"Selected Row: %ld", selectedRow);
 }
 
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
-    // Insert code here to tear down your application
-}
-
 - (IBAction)closeSecWindow:(id)sender {
     [self.window endSheet:self.securityWindow];
 }
 - (IBAction)closeNetworkWindow:(id)sender {
     [self.window endSheet:self.networkWindow];
+}
+- (IBAction)installApp:(id)sender {
+    
+}
+
+- (IBAction)quit:(id)sender {
+    [NSApp terminate:self];
+}
+
+- (void)applicationWillTerminate:(NSNotification *)aNotification {
+    // Insert code here to tear down your application
+}
+
+- (IBAction)installAppsTable:(id)sender {
 }
 @end

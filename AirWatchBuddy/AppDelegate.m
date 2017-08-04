@@ -23,8 +23,9 @@ static NSString *const kServerURISecurity = @"/api/mdm/devices/security";
 static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 static NSString *const kServerPublicApps = @"/api/mam/apps/internal";
 static NSString *const kServerInternalApps = @"/api/mam/apps/public";
-static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased";
+static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchasedappsearch";
 static NSString *const kServerAllApps = @"/api/mam/apps/search";
+static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
 
 
 @interface AppDelegate ()
@@ -88,6 +89,7 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
 @property NSArray *installAppsTableArray;
 - (IBAction)installAppsTable:(id)sender;
 - (IBAction)installApp:(id)sender;
+@property NSDictionary *installAppDict;
 
 
 @property (weak) IBOutlet NSTextField *searchValue;
@@ -108,7 +110,9 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
 - (IBAction)getInstalledApps:(id)sender;
 - (IBAction)getNetworkInfo:(id)sender;
 - (IBAction)getSecurityInfo:(id)sender;
-- (IBAction)installApplication:(id)sender;
+- (IBAction)installPurchasedApplication:(id)sender;
+- (IBAction)installInternalApplication:(id)sender;
+- (IBAction)installPublicApplication:(id)sender;
 
 @end
 
@@ -395,7 +399,7 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
 }
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row {
-    NSLog(@"In the table view function");
+    //NSLog(@"In the table view function");
     NSString *identifier = [tableColumn identifier];
     NSString *tableViewIdentifier = [tableView identifier];
     //NSLog(@"%@", tableViewIdentifier);
@@ -447,20 +451,25 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
         }
     } else if ([tableViewIdentifier isEqualToString:@"install_apps_table"]) {
         NSDictionary *app = self.installAppsTableArray[row];
-        NSLog(@"Working with the install apps table view");
+        //NSLog(@"Working with the install apps table view");
         
         if ([identifier isEqualToString:@"application_name"]) {
             NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"application_name" owner:self];
             [cellView.textField setStringValue:app[@"ApplicationName"]];
             return cellView;
         }
-        if ([identifier isEqualToString:@"bundle_identifier"]) {
-            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"bundle_identifier" owner:self];
+        if ([identifier isEqualToString:@"app_bundle_id"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"app_bundle_id" owner:self];
             [cellView.textField setStringValue:app[@"BundleId"]];
             return cellView;
         }
-        if ([identifier isEqualToString:@"type"]) {
-            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"type" owner:self];
+        if ([identifier isEqualToString:@"app_id"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"app_id" owner:self];
+            [cellView.textField setStringValue:app[@"Id"][@"Value"]];
+            return cellView;
+        }
+        if ([identifier isEqualToString:@"app_type"]) {
+            NSTableCellView *cellView = [tableView makeViewWithIdentifier:@"app_type" owner:self];
             [cellView.textField setStringValue:app[@"AppType"]];
             return cellView;
         }
@@ -1030,12 +1039,16 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
     return nil;
 }
 
-- (IBAction)installApplication:(id)sender {
+- (IBAction)installPurchasedApplication:(id)sender {
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+    NSLog(@"%@", serialNumber);
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents;
     airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    airWatchURLComponents.path = kServerAllApps;
+    airWatchURLComponents.path = kServerPurchasedApps;
     NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"pagesize" value:@"500"];
+    //NSURLQueryItem *status = [NSURLQueryItem queryItemWithName:@"status" value:@"Active"];
     airWatchURLComponents.queryItems = @[ pageSize ];
     
     // Create the base64 encoded authentication
@@ -1090,6 +1103,12 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
     [availableApps showWindow:self];
 }
 
+- (IBAction)installInternalApplication:(id)sender {
+}
+
+- (IBAction)installPublicApplication:(id)sender {
+}
+
 - (IBAction)deviceTableView:(id)sender {
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     //NSLog(@"Selected Row: %ld", selectedRow);
@@ -1138,7 +1157,8 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
     [self.window endSheet:self.networkWindow];
 }
 - (IBAction)installApp:(id)sender {
-    
+    //NSInteger selectedRow = [self.deviceTableView selectedRow];
+    //[self makePostRequest:kServerURIInstallApp serialNumber:self.deviceTableArray[selectedRow][@"SerialNumber"] postData:self.installAppDict];
 }
 
 - (IBAction)quit:(id)sender {

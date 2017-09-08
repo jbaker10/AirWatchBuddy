@@ -239,22 +239,6 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     return [creds componentsSeparatedByString:@"\n"];
 }
 
-//OSStatus GetPasswordKeychain (NSString *userName, NSString *serverURL, void **passwordAndAPIKey, UInt32 *passwordandAPIKeyLength, SecKeychainItemRef *keychainRef) {
-//    OSStatus ret = SecKeychainFindGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, passwordandAPIKeyLength, passwordAndAPIKey, keychainRef);
-//    return (ret);
-//}
-//
-//OSStatus ChangePasswordKeychain (SecKeychainItemRef keychainRef ) {
-//    OSStatus status;
-//    NSArray *creds = [self getCredsFromKeychainWithUserName:storedUsername serverURL:storedServerURL];
-//    status = SecKeychainItemModifyAttributesAndData (keychainRef, NULL, (UInt32)passwordandAPIKeyLength, passwordAndAPIKey);
-//    return (status);
-//}
-//
-- (IBAction)updateCredentials:(id)sender {
-
-}
-
 
 // Show the Credentials sheet
 - (IBAction)changeCredentials:(id)sender {

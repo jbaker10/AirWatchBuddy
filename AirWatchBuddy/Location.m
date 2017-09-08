@@ -10,13 +10,7 @@
 #import "MapAnnotations.h"
 #import <MapKit/MapKit.h>
 
-
-#define deviceLatitude 39.06738100;
-#define deviceLongitude -77.11668700;
-#define theSpan 0.05f;
-
 @interface Location ()
-
 
 @end
 
@@ -24,11 +18,6 @@
 
 - (void)windowDidLoad {
     [super windowDidLoad];
-    
-    MKMapView *mapView;
-    MapAnnotations *deviceAnnotation = [[MapAnnotations alloc] init];
-    [mapView removeAnnotation:deviceAnnotation];
-    
     // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
 
 }

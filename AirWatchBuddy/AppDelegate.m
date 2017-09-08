@@ -112,7 +112,6 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
 - (IBAction)installPurchasedApplication:(id)sender;
 - (IBAction)installInternalApplication:(id)sender;
 - (IBAction)installPublicApplication:(id)sender;
-- (IBAction)updateCredentials:(id)sender;
 
 @end
 
@@ -653,7 +652,7 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
         return;
     } else {
         Location *l = [[Location alloc] initWithWindow:self.mapWindow];
-        [l showWindow:self];
+        
         MKMapView *mapView = self.mapView;
         mapView.mapType = MKMapTypeStandard;
         MKCoordinateRegion region;
@@ -662,10 +661,9 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
         NSString *lastQueryTime = self.gpsInfo[@"SampleTime"];
         
         MKCoordinateSpan span;
-        span.latitudeDelta = theSpan;
-        span.longitudeDelta = theSpan;
+        span.latitudeDelta = 0.04f;
+        span.longitudeDelta = 0.04f;
         
-        //[mapView showAnnotations:annotation animated:YES];
         region.center = center;
         region.span = span;
         
@@ -674,10 +672,14 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
         deviceAnnotation.subtitle = lastQueryTime;
         deviceAnnotation.coordinate = center;
         
+        //NSArray *deviceAnnotationsArray = deviceAnnotation;
+        
         // We have to clear the old annotation before adding the new one or we will get multiple pins on the map.
+        [mapView removeAnnotations:mapView.annotations];
         
         [mapView addAnnotation:deviceAnnotation];
         [mapView setRegion:region animated:YES];
+        [l showWindow:self];
     }
 }
 

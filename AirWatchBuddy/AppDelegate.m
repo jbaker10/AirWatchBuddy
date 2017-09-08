@@ -104,7 +104,6 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
 @property (weak) IBOutlet NSWindow *mapWindow;
 - (IBAction)closeCredsSheet:(id)sender;
 - (IBAction)quit:(id)sender;
-- (IBAction)showCredentials:(id)sender;
 - (IBAction)getDeviceLocation:(id)sender;
 - (IBAction)getInstalledProfiles:(id)sender;
 - (IBAction)getInstalledApps:(id)sender;
@@ -113,6 +112,7 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
 - (IBAction)installPurchasedApplication:(id)sender;
 - (IBAction)installInternalApplication:(id)sender;
 - (IBAction)installPublicApplication:(id)sender;
+- (IBAction)updateCredentials:(id)sender;
 
 @end
 
@@ -132,38 +132,105 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
         self.password.stringValue = creds.firstObject;
         self.awTenantCode.stringValue = creds.lastObject;
     } else {
-        [self showCredentials:self];
+        [self changeCredentials:self];
     }
 }
 
 - (void)setCredsToKeychainWithUserName:(NSString *)userName serverURL:(NSString *)serverURL password:(NSString *)password awTenantCode:(NSString *)awTenantCode {
+    void *passwordAndAPIKey = NULL;
+    UInt32 passwordandAPIKeyLength = 0;
     NSString *creds = [[password stringByAppendingString:@"\n"] stringByAppendingString:awTenantCode];
-    
-    OSStatus ret = SecKeychainAddGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, (UInt32)creds.length, (void *)creds.UTF8String, NULL);
-    //NSLog(@"The return code from trying to add the keychain entry: %d", ret);
-    if (ret == errSecDuplicateItem) {
-    } else if (ret != errSecSuccess) {
-        // Should show an NSAlert here about how it couldn't set a keychain
-        NSAlert *alert = [[NSAlert alloc] init];
-        [alert addButtonWithTitle:@"OK"];
-        [alert setMessageText:@"Could not save info to Keychain!"];
-        [alert setInformativeText:@"Please ensure your default keychain is unlocked and available and try again."];
-        [alert setAlertStyle:NSAlertStyleWarning];
-        [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-            return;
-        }];
+    SecKeychainItemRef *keychainRef = NULL;
+    NSString *currentUserName = [[NSUserDefaults standardUserDefaults] valueForKey:@"Username"];
+    NSString *currentServerURL = [[NSUserDefaults standardUserDefaults] valueForKey:@"ServerURL"];
+    // Before trying to create or update the keychain, we need to try and find it, which allows us to set the keychainRef pointer properly
+    OSStatus retCurrentKeychain = SecKeychainFindGenericPassword(NULL, (UInt32)currentServerURL.length, currentServerURL.UTF8String, (UInt32)currentUserName.length, currentUserName.UTF8String, &passwordandAPIKeyLength, &passwordAndAPIKey, &keychainRef);
+    NSLog(@"%d", retCurrentKeychain);
+    // If the keychain item was found (i.e. errSecSuccess), modify the keychain using keychainRef
+    if (retCurrentKeychain == errSecSuccess) {
+        // Before updating the password or API key, we need to know if the username or serverURL were changed, which would create a new keychain item
+        if ([userName isEqualToString:currentUserName]) {
+            NSLog(@"Username was not updated");
+        } else {
+            NSLog(@"Username was updated. Making changes to plist and keychain now");
+            OSStatus retDeleteKeychain = SecKeychainItemDelete(keychainRef);
+            if (retDeleteKeychain != errSecSuccess) {
+                NSLog(@"Could not delete current keychain item. Please delete manually.");
+            }
+            CFRelease(keychainRef);
+            OSStatus ret = SecKeychainAddGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, (UInt32)creds.length, (void *)creds.UTF8String, NULL);
+            //NSLog(@"The return code from trying to add the keychain entry: %d", ret);
+            if (ret != errSecSuccess) {
+                // Should show an NSAlert here about how it couldn't set a keychain
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Could not save info to Keychain!"];
+                [alert setInformativeText:@"Please ensure your default keychain is unlocked and available, and try again."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            }
+            
+            [[NSUserDefaults standardUserDefaults] setValue:userName forKey:@"Username"];
+            [[NSUserDefaults standardUserDefaults] setValue:serverURL forKey:@"ServerURL"];
+        }
+        if ([serverURL isEqualToString:currentServerURL]) {
+            NSLog(@"ServerURL was not updated");
+        } else {
+            NSLog(@"ServerURL was updated. Making changes to plist and keychain now");
+            OSStatus retDeleteKeychain = SecKeychainItemDelete(keychainRef);
+            if (retDeleteKeychain != errSecSuccess) {
+                NSLog(@"Could not delete current keychain item. Please delete manually.");
+            }
+            CFRelease(keychainRef);
+            OSStatus ret = SecKeychainAddGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, (UInt32)creds.length, (void *)creds.UTF8String, NULL);
+            //NSLog(@"The return code from trying to add the keychain entry: %d", ret);
+            if (ret != errSecSuccess) {
+                // Should show an NSAlert here about how it couldn't set a keychain
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Could not save info to Keychain!"];
+                [alert setInformativeText:@"Please ensure your default keychain is unlocked and available, and try again."];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            }
+            
+            [[NSUserDefaults standardUserDefaults] setValue:userName forKey:@"Username"];
+            [[NSUserDefaults standardUserDefaults] setValue:serverURL forKey:@"ServerURL"];
+        }
+//        if ([serverURL isEqualToString:currentServerURL]) {
+//            
+//            OSStatus ret = SecKeychainItemModifyAttributesAndData(keychainRef, NULL, (UInt32)creds.length, (void *)creds.UTF8String);
+//        }
+    } else {
+        OSStatus ret = SecKeychainAddGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, (UInt32)creds.length, (void *)creds.UTF8String, keychainRef);
+        //NSLog(@"The return code from trying to add the keychain entry: %d", ret);
+        if (ret != errSecSuccess) {
+            // Should show an NSAlert here about how it couldn't set a keychain
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert addButtonWithTitle:@"OK"];
+            [alert setMessageText:@"Could not save info to Keychain!"];
+            [alert setInformativeText:@"Please ensure your default keychain is unlocked and available, and try again."];
+            [alert setAlertStyle:NSAlertStyleWarning];
+            [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                return;
+            }];
+        }
+        
+        [[NSUserDefaults standardUserDefaults] setValue:userName forKey:@"Username"];
+        [[NSUserDefaults standardUserDefaults] setValue:serverURL forKey:@"ServerURL"];
     }
-    
-    [[NSUserDefaults standardUserDefaults] setValue:userName forKey:@"Username"];
-    [[NSUserDefaults standardUserDefaults] setValue:serverURL forKey:@"ServerURL"];
 }
 
-// This method will try to retrieve the username and password from the Keychain entry corresponding to the AirWatch hsotname
+// This method will try to retrieve the username and password from the Keychain entry corresponding to the AirWatch hostname
 -(NSArray *)getCredsFromKeychainWithUserName:(NSString *)userName serverURL:(NSString *)serverURL {
     void *passwordAndAPIKey = NULL;
     UInt32 passwordandAPIKeyLength = 0;
-    
-    OSStatus ret = SecKeychainFindGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, &passwordandAPIKeyLength, &passwordAndAPIKey, NULL);
+    SecKeychainItemRef keychainRef;
+    OSStatus ret = SecKeychainFindGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, &passwordandAPIKeyLength, &passwordAndAPIKey, &keychainRef);
 
     if (ret != errSecSuccess) {
         return nil;
@@ -172,9 +239,25 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     return [creds componentsSeparatedByString:@"\n"];
 }
 
+//OSStatus GetPasswordKeychain (NSString *userName, NSString *serverURL, void **passwordAndAPIKey, UInt32 *passwordandAPIKeyLength, SecKeychainItemRef *keychainRef) {
+//    OSStatus ret = SecKeychainFindGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, passwordandAPIKeyLength, passwordAndAPIKey, keychainRef);
+//    return (ret);
+//}
+//
+//OSStatus ChangePasswordKeychain (SecKeychainItemRef keychainRef ) {
+//    OSStatus status;
+//    NSArray *creds = [self getCredsFromKeychainWithUserName:storedUsername serverURL:storedServerURL];
+//    status = SecKeychainItemModifyAttributesAndData (keychainRef, NULL, (UInt32)passwordandAPIKeyLength, passwordAndAPIKey);
+//    return (status);
+//}
+//
+- (IBAction)updateCredentials:(id)sender {
+
+}
+
 
 // Show the Credentials sheet
-- (IBAction)showCredentials:(id)sender {
+- (IBAction)changeCredentials:(id)sender {
     [self.window beginSheet:self.credsWindow completionHandler:^(NSModalResponse returnCode) {
         return;
     }];
@@ -1109,6 +1192,8 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
 - (IBAction)installPublicApplication:(id)sender {
 }
 
+
+
 - (IBAction)deviceTableView:(id)sender {
     NSInteger selectedRow = [self.deviceTableView selectedRow];
     //NSLog(@"Selected Row: %ld", selectedRow);
@@ -1140,13 +1225,13 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     self.devicesArray = devicesArray;
 }
 - (IBAction)profilesTableView:(id)sender {
-    NSInteger selectedRow = [self.profilesTableView selectedRow];
+    //NSInteger selectedRow = [self.profilesTableView selectedRow];
     //NSLog(@"Selected Row: %ld", selectedRow);
 }
 
 
 - (IBAction)appsTableView:(id)sender {
-    NSInteger selectedRow = [self.appsTableView selectedRow];
+    //NSInteger selectedRow = [self.appsTableView selectedRow];
     //NSLog(@"Selected Row: %ld", selectedRow);
 }
 

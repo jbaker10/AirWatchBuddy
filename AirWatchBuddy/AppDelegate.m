@@ -13,7 +13,6 @@
 #import <Security/Security.h>
 #import <MapKit/MapKit.h>
 
-#define theSpan 0.30f;
 static NSString *const kServerURIUser = @"/api/mdm/devices/search";
 static NSString *const kServerURIDevices = @"/api/mdm/devices";
 static NSString *const kServerURIGPS = @"/api/mdm/devices/gps";
@@ -25,8 +24,7 @@ static NSString *const kServerPublicApps = @"/api/mam/apps/internal";
 static NSString *const kServerInternalApps = @"/api/mam/apps/public";
 static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchasedappsearch";
 static NSString *const kServerAllApps = @"/api/mam/apps/search";
-static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
-
+static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased/";
 
 @interface AppDelegate ()
 @property (weak) IBOutlet NSWindow *window;
@@ -85,13 +83,13 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
 
 // App Install Window
 @property (weak) IBOutlet NSWindow *availableApps;
-@property (weak) IBOutlet NSTableView *installAppsTable;
+@property (weak) IBOutlet NSTableView *installAppsTableView;
 @property NSArray *installAppsTableArray;
-- (IBAction)installAppsTable:(id)sender;
+- (IBAction)installAppsTableView:(id)sender;
 - (IBAction)installApp:(id)sender;
 @property NSDictionary *installAppDict;
 
-
+// Main Window
 @property (weak) IBOutlet NSTextField *searchValue;
 @property (weak) IBOutlet NSPopUpButtonCell *searchParamater;
 @property (weak) IBOutlet NSPopUpButton *maxDeviceSearch;
@@ -123,9 +121,13 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     NSArray *creds = [self getCredsFromKeychainWithUserName:storedUsername serverURL:storedServerURL];
     if (storedServerURL) {
         self.serverURL.stringValue = storedServerURL;
+    } else {
+        [self changeCredentials:self];
     }
     if (storedUsername) {
         self.userName.stringValue = storedUsername;
+    } else {
+        [self changeCredentials:self];
     }
     if (creds.count == 2) {
         self.password.stringValue = creds.firstObject;
@@ -139,7 +141,7 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     void *passwordAndAPIKey = NULL;
     UInt32 passwordandAPIKeyLength = 0;
     NSString *creds = [[password stringByAppendingString:@"\n"] stringByAppendingString:awTenantCode];
-    SecKeychainItemRef *keychainRef = NULL;
+    SecKeychainItemRef keychainRef = NULL;
     NSString *currentUserName = [[NSUserDefaults standardUserDefaults] valueForKey:@"Username"];
     NSString *currentServerURL = [[NSUserDefaults standardUserDefaults] valueForKey:@"ServerURL"];
     // Before trying to create or update the keychain, we need to try and find it, which allows us to set the keychainRef pointer properly
@@ -200,12 +202,9 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
             [[NSUserDefaults standardUserDefaults] setValue:userName forKey:@"Username"];
             [[NSUserDefaults standardUserDefaults] setValue:serverURL forKey:@"ServerURL"];
         }
-//        if ([serverURL isEqualToString:currentServerURL]) {
-//            
-//            OSStatus ret = SecKeychainItemModifyAttributesAndData(keychainRef, NULL, (UInt32)creds.length, (void *)creds.UTF8String);
-//        }
     } else {
-        OSStatus ret = SecKeychainAddGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, (UInt32)creds.length, (void *)creds.UTF8String, keychainRef);
+        OSStatus ret = SecKeychainAddGenericPassword(NULL, (UInt32)serverURL.length, serverURL.UTF8String, (UInt32)userName.length, userName.UTF8String, (UInt32)creds.length, (void *)creds.UTF8String, &keychainRef);
+        
         //NSLog(@"The return code from trying to add the keychain entry: %d", ret);
         if (ret != errSecSuccess) {
             // Should show an NSAlert here about how it couldn't set a keychain
@@ -218,6 +217,7 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
                 return;
             }];
         }
+        CFRelease(keychainRef);
         
         [[NSUserDefaults standardUserDefaults] setValue:userName forKey:@"Username"];
         [[NSUserDefaults standardUserDefaults] setValue:serverURL forKey:@"ServerURL"];
@@ -1053,14 +1053,13 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
 //}
 
 
-- (NSDictionary *)makePostRequest:(NSString *)URIPath serialNumber:(NSString *)serialNumber postData:(NSDictionary *)postData{
+- (NSDictionary *)sendPostRequest:(NSString *)URIPath serialNumber:(NSString *)serialNumber {
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    //NSString *serialNumberPlusGPS = [[@"/" stringByAppendingString:serialNumber] stringByAppendingString:@"/gps"];
     airWatchURLComponents.path = URIPath;
-    NSURLQueryItem *serialNumberParamater = [NSURLQueryItem queryItemWithName:@"searchby" value:@"serialnumber"];
-    NSURLQueryItem *serialNumberValue = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
-    airWatchURLComponents.queryItems = @[ serialNumberParamater, serialNumberValue ];
+    NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:@"SerialNumber", serialNumber , nil];
+    NSError *error;
+    NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
 
     // Create the base64 encoded authentication
     NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
@@ -1074,6 +1073,7 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
     [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
     [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    [URLRequest setHTTPBody:JSONPostData];
     URLRequest.HTTPMethod = @"POST";
 
     // Create the semaphore
@@ -1158,10 +1158,11 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
         //NSLog(@"%@", returnedJSON);
         NSMutableArray *appsArray = [NSMutableArray array];
         appsArray = returnedJSON[@"Application"];
+        NSLog(@"%@", appsArray);
         NSArray *descriptor = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"ApplicationName" ascending:YES]];
         NSArray *sortedApps = [appsArray sortedArrayUsingDescriptors:descriptor];
         self.installAppsTableArray = sortedApps;
-        [self.installAppsTable reloadData];
+        [self.installAppsTableView reloadData];
         dispatch_semaphore_signal(sema);
     }] resume];
     
@@ -1228,8 +1229,77 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     [self.window endSheet:self.networkWindow];
 }
 - (IBAction)installApp:(id)sender {
-    //NSInteger selectedRow = [self.deviceTableView selectedRow];
-    //[self makePostRequest:kServerURIInstallApp serialNumber:self.deviceTableArray[selectedRow][@"SerialNumber"] postData:self.installAppDict];
+    NSInteger deviceSelectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[deviceSelectedRow][@"SerialNumber"];
+    NSLog(@"Sending install command for serial: %@", serialNumber);
+    
+    NSInteger appSelectedRow = [self.installAppsTableView selectedRow];
+    NSNumber *appToInstall = self.installAppsTableArray[appSelectedRow][@"Id"][@"Value"];
+    NSLog(@"Installing app: %@", appToInstall);
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    
+    airWatchURLComponents.path = [[kServerURIInstallPurchasedApp stringByAppendingString:appToInstall.stringValue] stringByAppendingString:@"/install"];
+    NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:serialNumber, @"SerialNumber", nil];
+    NSError *error;
+    NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
+    if (JSONPostData) {
+        // process the data
+    } else {
+        NSLog(@"Unable to serialize the data %@: %@", postData, error);
+    }
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    [URLRequest setHTTPBody:JSONPostData];
+    URLRequest.HTTPMethod = @"POST";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+            NSString *errorMessage;
+            if (!returnedJSON[@"Message"]) {
+                errorMessage = @"Something went wrong.";
+            } else {
+                errorMessage = returnedJSON[@"Message"];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:errorMessage];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
 }
 
 - (IBAction)quit:(id)sender {
@@ -1240,6 +1310,6 @@ static NSString *const kServerURIInstallApp = @"/api/mam/apps/purchased/";
     // Insert code here to tear down your application
 }
 
-- (IBAction)installAppsTable:(id)sender {
+- (IBAction)installAppsTableView:(id)sender {
 }
 @end

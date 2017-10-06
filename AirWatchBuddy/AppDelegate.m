@@ -25,6 +25,8 @@ static NSString *const kServerInternalApps = @"/api/mam/apps/internal";
 static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchasedappsearch";
 static NSString *const kServerAllApps = @"/api/mam/apps/search";
 static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased/";
+static NSString *const kServerURIInstallInternalApp = @"/api/mam/apps/internal/";
+static NSString *const kServerURIInstallPublicApp = @"/api/mam/apps/public/";
 
 @interface AppDelegate ()
 @property (weak) IBOutlet NSWindow *window;
@@ -446,6 +448,37 @@ static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased
             [self deviceDetails];
         }
     }
+}
+
+- (IBAction)deviceTableView:(id)sender {
+    NSInteger selectedRow = [self.deviceTableView selectedRow];
+    //NSLog(@"Selected Row: %ld", selectedRow);
+    NSMutableArray *devicesArray = [NSMutableArray array];
+    Device *d = [[Device alloc] init];
+    d.deviceModel = self.deviceTableArray[selectedRow][@"Model"];
+    d.customerEmailAddress = self.deviceTableArray[selectedRow][@"UserEmailAddress"];
+    d.deviceSerialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+    d.deviceMACAddress = self.deviceTableArray[selectedRow][@"MacAddress"];
+    d.devicePlatform = self.deviceTableArray[selectedRow][@"Platform"];
+    d.deviceOS = self.deviceTableArray[selectedRow][@"OperatingSystem"];
+    if ([self.deviceTableArray[selectedRow][@"IsSupervised"] boolValue]) {
+        d.deviceSupervisedBool = @"True";
+    } else {
+        d.deviceSupervisedBool = @"False";
+    }
+    d.deviceIMEI = self.deviceTableArray[selectedRow][@"Imei"];
+    d.devicePhoneNumber = self.deviceTableArray[selectedRow][@"PhoneNumber"];
+    d.deviceVirtualMemory = self.deviceTableArray[selectedRow][@"VirtualMemory"];
+    d.deviceACLineStatus = self.deviceTableArray[selectedRow][@"AcLineStatus"];
+    d.deviceLastSeen = self.deviceTableArray[selectedRow][@"LastSeen"];
+    d.deviceAssetNumber = self.deviceTableArray[selectedRow][@"AssetNumber"];
+    d.deviceCompromisedStatus = self.deviceTableArray[selectedRow][@"CompromisedStatus"];
+    d.deviceComplianceStatus = self.deviceTableArray[selectedRow][@"ComplianceStatus"];
+    d.deviceLocationGroupName = self.deviceTableArray[selectedRow][@"LocationGroupName"];
+    d.deviceEnrollmentStatus = self.deviceTableArray[selectedRow][@"EnrollmentStatus"];
+    d.deviceUDID = self.deviceTableArray[selectedRow][@"Udid"];
+    [devicesArray addObject:d];
+    self.devicesArray = devicesArray;
 }
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView {
@@ -1124,16 +1157,16 @@ static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased
     return nil;
 }
 
-- (IBAction)installPurchasedApplication:(id)sender {
-    NSInteger selectedRow = [self.deviceTableView selectedRow];
-    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
-    NSLog(@"%@", serialNumber);
+// This function is used by the three functions below that GET
+// the apps that are available to install. These can be of type
+// Purchased, Public, or Internal
+
+- (void)genericInstallAppFunction:(NSString *)installAppURI {
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents;
     airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    airWatchURLComponents.path = kServerPurchasedApps;
+    airWatchURLComponents.path = installAppURI;
     NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"pagesize" value:@"500"];
-    //NSURLQueryItem *status = [NSURLQueryItem queryItemWithName:@"status" value:@"Active"];
     airWatchURLComponents.queryItems = @[ pageSize ];
     
     // Create the base64 encoded authentication
@@ -1187,187 +1220,31 @@ static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased
     }
     NSWindowController *availableApps = [[NSWindowController alloc] initWithWindow:self.availableApps];
     [availableApps showWindow:self];
+}
+
+// These titles are a bit misleading, these functions do a GET of the _available_
+// apps for which you CAN install. I.e. installPurchasedApplications really gets
+// all apps available to install that are Purchased
+
+- (IBAction)installPurchasedApplication:(id)sender {
+//    NSInteger selectedRow = [self.deviceTableView selectedRow];
+//    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
+//    NSLog(@"%@", serialNumber);
+    [self genericInstallAppFunction:kServerInternalApps];
 }
 
 - (IBAction)installInternalApplication:(id)sender {
-    NSInteger selectedRow = [self.deviceTableView selectedRow];
-    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
-    NSLog(@"%@", serialNumber);
-    // Create the URL request with the hostname and search URI's
-    NSURLComponents *airWatchURLComponents;
-    airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    airWatchURLComponents.path = kServerInternalApps;
-    NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"pagesize" value:@"500"];
-    //NSURLQueryItem *status = [NSURLQueryItem queryItemWithName:@"status" value:@"Active"];
-    airWatchURLComponents.queryItems = @[ pageSize ];
-    
-    // Create the base64 encoded authentication
-    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
-    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
-    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
-    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
-    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
-    
-    // Complete the URL request and add-in headers
-    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
-    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
-    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
-    URLRequest.HTTPMethod = @"GET";
-    
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    // Run the query using the URL request and return the JSON
-    NSURLSession *session = [NSURLSession sharedSession];
-    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        
-        if (!data) return;
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-        if ([httpResponse statusCode] != 200) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSAlert *alert = [[NSAlert alloc] init];
-                [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
-                [alert setAlertStyle:NSAlertStyleWarning];
-                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                    return;
-                }];
-            });
-            return;
-        }
-        NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        //NSLog(@"%@", returnedJSON);
-        NSMutableArray *appsArray = [NSMutableArray array];
-        appsArray = returnedJSON[@"Application"];
-        NSLog(@"%@", appsArray);
-        NSArray *descriptor = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"ApplicationName" ascending:YES]];
-        NSArray *sortedApps = [appsArray sortedArrayUsingDescriptors:descriptor];
-        self.installAppsTableArray = sortedApps;
-        [self.installAppsTableView reloadData];
-        dispatch_semaphore_signal(sema);
-    }] resume];
-    
-    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
-        NSLog(@"Timeout");
-    }
-    NSWindowController *availableApps = [[NSWindowController alloc] initWithWindow:self.availableApps];
-    [availableApps showWindow:self];
+    [self genericInstallAppFunction:kServerInternalApps];
 }
 
 - (IBAction)installPublicApplication:(id)sender {
-    NSInteger selectedRow = [self.deviceTableView selectedRow];
-    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
-    NSLog(@"%@", serialNumber);
-    // Create the URL request with the hostname and search URI's
-    NSURLComponents *airWatchURLComponents;
-    airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    airWatchURLComponents.path = kServerPublicApps;
-    NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"pagesize" value:@"500"];
-    //NSURLQueryItem *status = [NSURLQueryItem queryItemWithName:@"status" value:@"Active"];
-    airWatchURLComponents.queryItems = @[ pageSize ];
-    
-    // Create the base64 encoded authentication
-    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
-    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
-    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
-    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
-    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
-    
-    // Complete the URL request and add-in headers
-    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
-    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
-    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Accept"];
-    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
-    URLRequest.HTTPMethod = @"GET";
-    
-    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-    // Run the query using the URL request and return the JSON
-    NSURLSession *session = [NSURLSession sharedSession];
-    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
-        
-        if (!data) return;
-        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-        if ([httpResponse statusCode] != 200) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSAlert *alert = [[NSAlert alloc] init];
-                [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
-                [alert setAlertStyle:NSAlertStyleWarning];
-                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                    return;
-                }];
-            });
-            return;
-        }
-        NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-        //NSLog(@"%@", returnedJSON);
-        NSMutableArray *appsArray = [NSMutableArray array];
-        appsArray = returnedJSON[@"Application"];
-        NSLog(@"%@", appsArray);
-        NSArray *descriptor = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"ApplicationName" ascending:YES]];
-        NSArray *sortedApps = [appsArray sortedArrayUsingDescriptors:descriptor];
-        self.installAppsTableArray = sortedApps;
-        [self.installAppsTableView reloadData];
-        dispatch_semaphore_signal(sema);
-    }] resume];
-    
-    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
-        NSLog(@"Timeout");
-    }
-    NSWindowController *availableApps = [[NSWindowController alloc] initWithWindow:self.availableApps];
-    [availableApps showWindow:self];
+    [self genericInstallAppFunction:kServerPublicApps];
 }
 
 
+// This is the function that makes the POST request to actually install the app
+// on the selected device with the app chosen from the previous functions
 
-- (IBAction)deviceTableView:(id)sender {
-    NSInteger selectedRow = [self.deviceTableView selectedRow];
-    //NSLog(@"Selected Row: %ld", selectedRow);
-    NSMutableArray *devicesArray = [NSMutableArray array];
-    Device *d = [[Device alloc] init];
-    d.deviceModel = self.deviceTableArray[selectedRow][@"Model"];
-    d.customerEmailAddress = self.deviceTableArray[selectedRow][@"UserEmailAddress"];
-    d.deviceSerialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
-    d.deviceMACAddress = self.deviceTableArray[selectedRow][@"MacAddress"];
-    d.devicePlatform = self.deviceTableArray[selectedRow][@"Platform"];
-    d.deviceOS = self.deviceTableArray[selectedRow][@"OperatingSystem"];
-    if ([self.deviceTableArray[selectedRow][@"IsSupervised"] boolValue]) {
-        d.deviceSupervisedBool = @"True";
-    } else {
-        d.deviceSupervisedBool = @"False";
-    }
-    d.deviceIMEI = self.deviceTableArray[selectedRow][@"Imei"];
-    d.devicePhoneNumber = self.deviceTableArray[selectedRow][@"PhoneNumber"];
-    d.deviceVirtualMemory = self.deviceTableArray[selectedRow][@"VirtualMemory"];
-    d.deviceACLineStatus = self.deviceTableArray[selectedRow][@"AcLineStatus"];
-    d.deviceLastSeen = self.deviceTableArray[selectedRow][@"LastSeen"];
-    d.deviceAssetNumber = self.deviceTableArray[selectedRow][@"AssetNumber"];
-    d.deviceCompromisedStatus = self.deviceTableArray[selectedRow][@"CompromisedStatus"];
-    d.deviceComplianceStatus = self.deviceTableArray[selectedRow][@"ComplianceStatus"];
-    d.deviceLocationGroupName = self.deviceTableArray[selectedRow][@"LocationGroupName"];
-    d.deviceEnrollmentStatus = self.deviceTableArray[selectedRow][@"EnrollmentStatus"];
-    d.deviceUDID = self.deviceTableArray[selectedRow][@"Udid"];
-    [devicesArray addObject:d];
-    self.devicesArray = devicesArray;
-}
-- (IBAction)profilesTableView:(id)sender {
-    //NSInteger selectedRow = [self.profilesTableView selectedRow];
-    //NSLog(@"Selected Row: %ld", selectedRow);
-}
-
-
-- (IBAction)appsTableView:(id)sender {
-    //NSInteger selectedRow = [self.appsTableView selectedRow];
-    //NSLog(@"Selected Row: %ld", selectedRow);
-}
-
-- (IBAction)closeSecWindow:(id)sender {
-    [self.window endSheet:self.securityWindow];
-}
-- (IBAction)closeNetworkWindow:(id)sender {
-    [self.window endSheet:self.networkWindow];
-}
 - (IBAction)installApp:(id)sender {
     // Retrieve the device information from the Device Table (in main Windows)
     NSInteger deviceSelectedRow = [self.deviceTableView selectedRow];
@@ -1377,11 +1254,20 @@ static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased
     // Retrieve the app information from the InstallAppsTableView (a part of the tableView method)
     NSInteger appSelectedRow = [self.installAppsTableView selectedRow];
     NSNumber *appToInstall = self.installAppsTableArray[appSelectedRow][@"Id"][@"Value"];
+    NSString *typeOfApp = self.installAppsTableArray[appSelectedRow][@"Type"];
     NSLog(@"Installing app: %@", appToInstall);
     
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    airWatchURLComponents.path = [[kServerURIInstallPurchasedApp stringByAppendingString:appToInstall.stringValue] stringByAppendingString:@"/install"];
+    NSString *appServerPath;
+    if ([typeOfApp isEqualToString:@"Purchased"]) {
+        appServerPath = kServerURIInstallPurchasedApp;
+    } else if ([typeOfApp isEqualToString:@"Internal"]) {
+        appServerPath = kServerURIInstallInternalApp;
+    } else if ([typeOfApp isEqualToString:@"Public"]) {
+        appServerPath = kServerURIInstallPublicApp;
+    }
+    airWatchURLComponents.path = [[appServerPath stringByAppendingString:appToInstall.stringValue] stringByAppendingString:@"/install"];
     NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:serialNumber, @"SerialNumber", nil];
     NSError *error;
     NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
@@ -1438,6 +1324,23 @@ static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
+}
+
+- (IBAction)profilesTableView:(id)sender {
+    //NSInteger selectedRow = [self.profilesTableView selectedRow];
+    //NSLog(@"Selected Row: %ld", selectedRow);
+}
+
+- (IBAction)appsTableView:(id)sender {
+    //NSInteger selectedRow = [self.appsTableView selectedRow];
+    //NSLog(@"Selected Row: %ld", selectedRow);
+}
+
+- (IBAction)closeSecWindow:(id)sender {
+    [self.window endSheet:self.securityWindow];
+}
+- (IBAction)closeNetworkWindow:(id)sender {
+    [self.window endSheet:self.networkWindow];
 }
 
 - (IBAction)quit:(id)sender {

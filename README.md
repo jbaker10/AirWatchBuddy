@@ -34,8 +34,10 @@ AirWatchBuddy also places a preference file on disk under `~/Library/Preferences
 ![](Images/SecurityInfo.png)
 
 #
-### Install applications or profiles on a device
-Coming soon!
+### Install applications or profiles on a device (in progress)
+You can currently install "Purchased Apps" via AirWatchBuddy. Future releases will bring support for Public Apps, Internal Apps, and Profiles.
+
+![](Images/InstallApps.png)
 
 ## Credits
 

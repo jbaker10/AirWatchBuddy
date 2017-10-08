@@ -27,6 +27,7 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
 static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased/";
 static NSString *const kServerURIInstallInternalApp = @"/api/mam/apps/internal/";
 static NSString *const kServerURIInstallPublicApp = @"/api/mam/apps/public/";
+static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/commands";
 
 @interface AppDelegate ()
 @property (weak) IBOutlet NSWindow *window;
@@ -1227,9 +1228,6 @@ static NSString *const kServerURIInstallPublicApp = @"/api/mam/apps/public/";
 // all apps available to install that are Purchased
 
 - (IBAction)installPurchasedApplication:(id)sender {
-//    NSInteger selectedRow = [self.deviceTableView selectedRow];
-//    NSString *serialNumber = self.deviceTableArray[selectedRow][@"SerialNumber"];
-//    NSLog(@"%@", serialNumber);
     [self genericInstallAppFunction:kServerInternalApps];
 }
 
@@ -1239,6 +1237,170 @@ static NSString *const kServerURIInstallPublicApp = @"/api/mam/apps/public/";
 
 - (IBAction)installPublicApplication:(id)sender {
     [self genericInstallAppFunction:kServerPublicApps];
+}
+
+// The next 7 functions are all device commands that can be sent, such as Sync the device, or Lock the device.
+
+- (void)executeDeviceCommand:(NSString *)commandToBeSent {
+    // Retrieve the device information from the Device Table (in main Windows)
+    NSInteger deviceSelectedRow = [self.deviceTableView selectedRow];
+    NSString *serialNumber = self.deviceTableArray[deviceSelectedRow][@"SerialNumber"];
+    NSLog(@"Sending install command for serial: %@", serialNumber);
+    
+    
+    // Create the URL request with the hostname and search URI's
+    NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    airWatchURLComponents.path = kServerURIDeviceCommands;
+    NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:serialNumber, @"SerialNumber", commandToBeSent, @"command", nil];
+    NSError *error;
+    NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
+    if (JSONPostData) {
+        // process the data
+    } else {
+        NSLog(@"Unable to serialize the data %@: %@", postData, error);
+        return;
+    }
+    
+    // Create the base64 encoded authentication
+    NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+    NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+    NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+    NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+    //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+    
+    // Complete the URL request and add-in headers
+    NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+    [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+    [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+    [URLRequest setHTTPBody:JSONPostData];
+    URLRequest.HTTPMethod = @"POST";
+    
+    // Create the semaphore
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    // Run the query using the URL request and return the JSON
+    NSURLSession *session = [NSURLSession sharedSession];
+    [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        
+        if (!data) return;
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+        if ([httpResponse statusCode] != 200) {
+            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+            NSString *errorMessage;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Received a bad response from the server."];
+                [alert setInformativeText:errorMessage];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
+        }
+        dispatch_semaphore_signal(sema);
+        
+    }] resume];
+    
+    if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+        NSLog(@"Timeout");
+    }
+}
+
+- (IBAction)syncDevice:(id)sender {
+    [self executeDeviceCommand:@"SyncDevice"];
+}
+
+- (IBAction)queryDevice:(id)sender {
+    [self executeDeviceCommand:@"DeviceQuery"];
+}
+
+- (IBAction)clearDevicePasscode:(id)sender {
+    [self executeDeviceCommand:@"ClearPasscode"];
+}
+
+- (IBAction)lockDevice:(id)sender {
+    [self executeDeviceCommand:@"Lock"];
+}
+
+- (IBAction)enterpriseWipeDevice:(id)sender {
+    [self executeDeviceCommand:@"DeviceWipe"];
+}
+
+- (IBAction)fullWipeDevice:(id)sender {
+    [self executeDeviceCommand:@"DeviceWipe"];
+}
+
+- (IBAction)deleteDevice:(id)sender {
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"Confirm"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setMessageText:@"Delete the device?"];
+    [alert setInformativeText:@"Deleted devices cannot be restored. You will need to re-enroll the device if you delete it."];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+        if (returnCode == NSAlertFirstButtonReturn) {
+            // Retrieve the device information from the Device Table (in main Windows)
+            NSInteger deviceSelectedRow = [self.deviceTableView selectedRow];
+            NSString *serialNumber = self.deviceTableArray[deviceSelectedRow][@"SerialNumber"];
+            NSLog(@"Sending delete command for device serial: %@", serialNumber);
+            
+            // Create the URL request with the hostname and search URI's
+            NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+            airWatchURLComponents.path = @"/api/mdm/devices/";
+            NSURLQueryItem *searchParameter = [NSURLQueryItem queryItemWithName:@"searchby" value:@"SerialNumber"];
+            NSURLQueryItem *idParameter = [NSURLQueryItem queryItemWithName:@"id" value:serialNumber];
+            airWatchURLComponents.queryItems = @[ searchParameter, idParameter ];
+            
+            // Create the base64 encoded authentication
+            NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
+            NSData *authenticationData = [authenticationString dataUsingEncoding:NSASCIIStringEncoding];
+            NSString *b64AuthenticationString = [authenticationData base64EncodedStringWithOptions:0];
+            NSString *totalAuthHeader = [@"Basic " stringByAppendingString:b64AuthenticationString];
+            //NSLog(@"Base64 Encoded Creds: %@", b64AuthenticationString);
+            
+            // Complete the URL request and add-in headers
+            NSMutableURLRequest *URLRequest = [NSMutableURLRequest requestWithURL:airWatchURLComponents.URL];
+            [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
+            [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+            [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
+            URLRequest.HTTPMethod = @"DELETE";
+            
+            // Create the semaphore
+            
+            dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+            // Run the query using the URL request and return the JSON
+            NSURLSession *session = [NSURLSession sharedSession];
+            [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+                
+                if (!data) return;
+                NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+                if ([httpResponse statusCode] != 200) {
+                    NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+                    NSString *errorMessage;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        NSAlert *alert = [[NSAlert alloc] init];
+                        [alert addButtonWithTitle:@"OK"];
+                        [alert setMessageText:@"Received a bad response from the server."];
+                        [alert setInformativeText:errorMessage];
+                        [alert setAlertStyle:NSAlertStyleWarning];
+                        [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                            return;
+                        }];
+                    });
+                    return;
+                }
+                dispatch_semaphore_signal(sema);
+                
+            }] resume];
+            
+            if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
+                NSLog(@"Timeout");
+            }
+        }
+    }];
 }
 
 
@@ -1325,6 +1487,7 @@ static NSString *const kServerURIInstallPublicApp = @"/api/mam/apps/public/";
         NSLog(@"Timeout");
     }
 }
+
 
 - (IBAction)profilesTableView:(id)sender {
     //NSInteger selectedRow = [self.profilesTableView selectedRow];

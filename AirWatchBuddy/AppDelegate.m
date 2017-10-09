@@ -2,8 +2,8 @@
 //  AppDelegate.m
 //  AirWatchBuddy
 //
-//  Created by Baker, Jeremiah (NIH/NIMH) [C] on 7/1/17.
-//  Copyright © 2017 Baker, Jeremiah (NIH/NIMH) [C]. All rights reserved.
+//  Created by Jeremiah Baker on 7/1/17.
+//  Copyright © 2017 Jeremiah Baker. All rights reserved.
 //
 
 #import "AppDelegate.h"
@@ -1245,13 +1245,19 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
     // Retrieve the device information from the Device Table (in main Windows)
     NSInteger deviceSelectedRow = [self.deviceTableView selectedRow];
     NSString *serialNumber = self.deviceTableArray[deviceSelectedRow][@"SerialNumber"];
-    NSString *deviceID = self.deviceTableArray[deviceSelectedRow][@"Id"];
-    NSLog(@"Sending install command for serial: %@", serialNumber);
+    NSNumber *deviceID = self.deviceTableArray[deviceSelectedRow][@"Id"][@"Value"];
+    
+    NSLog(@"Sending install command for serial: %@", deviceID);
     
     
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    airWatchURLComponents.path = [[[kServerURIDeviceCommands stringByAppendingString:deviceID] stringByAppendingString:@"/"] stringByAppendingString:commandToBeSent];
+    
+    //airWatchURLComponents.path = [[[kServerURIDeviceCommands stringByAppendingString:deviceID.stringValue] stringByAppendingString:@"/"] stringByAppendingString:commandToBeSent];
+    
+    // This is using the deprecated API URI, will need to be updated down the line
+    airWatchURLComponents.path = [[[@"/api/mdm/devices/serialnumber/" stringByAppendingString:serialNumber] stringByAppendingString:@"/"] stringByAppendingString:commandToBeSent];
+    
 //    NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:serialNumber, @"SerialNumber", commandToBeSent, @"command", nil];
 //    NSError *error;
 //    NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
@@ -1286,7 +1292,7 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
         
         if (!data) return;
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-        if ([httpResponse statusCode] != 200) {
+        if ([httpResponse statusCode] != 202) {
             NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             NSString *errorMessage;
             if (!returnedJSON[@"Message"]) {
@@ -1305,9 +1311,27 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
                 }];
             });
             return;
+        } else {
+            dispatch_semaphore_signal(sema);
+            NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+            NSString *errorMessage;
+            if (!returnedJSON[@"Message"]) {
+                errorMessage = @"Something went wrong when sending the command.";
+            } else {
+                errorMessage = returnedJSON[@"Message"];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Command sent successfully!"];
+                //[alert setInformativeText:errorMessage];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
+            return;
         }
-        dispatch_semaphore_signal(sema);
-        
     }] resume];
     
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
@@ -1320,7 +1344,10 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
 }
 
 - (IBAction)queryDevice:(id)sender {
-    [self executeDeviceCommand:@"DeviceQuery"];
+    //[self executeDeviceCommand:@"DeviceQuery"];
+    
+    // This is the deprecated API, but using for now
+    [self executeDeviceCommand:@"query"];
 }
 
 - (IBAction)clearDevicePasscode:(id)sender {
@@ -1328,11 +1355,14 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
 }
 
 - (IBAction)lockDevice:(id)sender {
-    [self executeDeviceCommand:@"Lock"];
+    //[self executeDeviceCommand:@"Lock"];
+    
+    // This is the deprecated API, but using for now
+    [self executeDeviceCommand:@"lockdevice"];
 }
 
 - (IBAction)enterpriseWipeDevice:(id)sender {
-    [self executeDeviceCommand:@"DeviceWipe"];
+    [self executeDeviceCommand:@"EnterpriseWipe"];
 }
 
 - (IBAction)fullWipeDevice:(id)sender {

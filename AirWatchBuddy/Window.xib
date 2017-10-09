@@ -107,7 +107,7 @@
                                                     <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                                     <prototypeCellViews>
                                                         <tableCellView identifier="serial_number_column" id="sug-va-7Ym">
-                                                            <rect key="frame" x="187.5" y="1" width="174" height="17"/>
+                                                            <rect key="frame" x="188" y="1" width="174" height="17"/>
                                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                             <subviews>
                                                                 <textField identifier="serial_number_column" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Dqh-NV-wdw">
@@ -810,60 +810,9 @@ DQ
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="File" id="UCx-hN-gqX">
                         <items>
-                            <menuItem title="New" keyEquivalent="n" id="5md-UF-T44">
+                            <menuItem title="Change Credentials" keyEquivalent="?" id="YaD-C0-Mg6">
                                 <connections>
-                                    <action selector="newDocument:" target="-1" id="EcE-qe-ejT"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Open…" keyEquivalent="o" id="SlG-LJ-Htr">
-                                <connections>
-                                    <action selector="openDocument:" target="-1" id="Brg-Yh-uxK"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Open Recent" id="RUh-Nd-mfe">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <menu key="submenu" title="Open Recent" systemMenu="recentDocuments" id="lxs-ga-wbP">
-                                    <items>
-                                        <menuItem title="Clear Menu" id="rCL-WN-Lyj">
-                                            <modifierMask key="keyEquivalentModifierMask"/>
-                                            <connections>
-                                                <action selector="clearRecentDocuments:" target="-1" id="8fL-eR-2YC"/>
-                                            </connections>
-                                        </menuItem>
-                                    </items>
-                                </menu>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="zbT-dS-SrI"/>
-                            <menuItem title="Close" keyEquivalent="w" id="LSj-wT-lJ8">
-                                <connections>
-                                    <action selector="performClose:" target="-1" id="HgN-ia-znA"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Save…" keyEquivalent="s" id="X51-hF-5ze">
-                                <connections>
-                                    <action selector="saveDocument:" target="-1" id="pRc-pE-MKe"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Save As…" keyEquivalent="S" id="bh9-oP-x9U">
-                                <connections>
-                                    <action selector="saveDocumentAs:" target="-1" id="x3X-eX-A40"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Revert to Saved" keyEquivalent="r" id="4i1-lX-Tze">
-                                <connections>
-                                    <action selector="revertDocumentToSaved:" target="-1" id="6yj-ki-7Zb"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem isSeparatorItem="YES" id="4yw-fM-LRx"/>
-                            <menuItem title="Page Setup…" keyEquivalent="P" id="GHM-j6-FNT">
-                                <modifierMask key="keyEquivalentModifierMask" shift="YES" command="YES"/>
-                                <connections>
-                                    <action selector="runPageLayout:" target="-1" id="UcH-ZI-l5Z"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Print…" keyEquivalent="p" id="8Lx-3Q-IBk">
-                                <connections>
-                                    <action selector="print:" target="-1" id="fY7-OV-X9H"/>
+                                    <action selector="changeCredentials:" target="PWH-po-2tO" id="goH-Pj-xss"/>
                                 </connections>
                             </menuItem>
                         </items>
@@ -873,11 +822,6 @@ DQ
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <menu key="submenu" title="Edit" id="vAi-wJ-EXR">
                         <items>
-                            <menuItem title="Change Credentials" keyEquivalent="?" id="YaD-C0-Mg6">
-                                <connections>
-                                    <action selector="changeCredentials:" target="PWH-po-2tO" id="goH-Pj-xss"/>
-                                </connections>
-                            </menuItem>
                             <menuItem title="Undo" keyEquivalent="z" id="luV-bY-2Hy">
                                 <connections>
                                     <action selector="undo:" target="-1" id="J3K-p5-lGf"/>

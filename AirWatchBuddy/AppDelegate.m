@@ -27,7 +27,7 @@ static NSString *const kServerAllApps = @"/api/mam/apps/search";
 static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased/";
 static NSString *const kServerURIInstallInternalApp = @"/api/mam/apps/internal/";
 static NSString *const kServerURIInstallPublicApp = @"/api/mam/apps/public/";
-static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/commands";
+static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
 
 @interface AppDelegate ()
 @property (weak) IBOutlet NSWindow *window;
@@ -1245,21 +1245,22 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/co
     // Retrieve the device information from the Device Table (in main Windows)
     NSInteger deviceSelectedRow = [self.deviceTableView selectedRow];
     NSString *serialNumber = self.deviceTableArray[deviceSelectedRow][@"SerialNumber"];
+    NSString *deviceID = self.deviceTableArray[deviceSelectedRow][@"Id"];
     NSLog(@"Sending install command for serial: %@", serialNumber);
     
     
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
-    airWatchURLComponents.path = kServerURIDeviceCommands;
-    NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:serialNumber, @"SerialNumber", commandToBeSent, @"command", nil];
-    NSError *error;
-    NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
-    if (JSONPostData) {
-        // process the data
-    } else {
-        NSLog(@"Unable to serialize the data %@: %@", postData, error);
-        return;
-    }
+    airWatchURLComponents.path = [[[kServerURIDeviceCommands stringByAppendingString:deviceID] stringByAppendingString:@"/"] stringByAppendingString:commandToBeSent];
+//    NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:serialNumber, @"SerialNumber", commandToBeSent, @"command", nil];
+//    NSError *error;
+//    NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
+//    if (JSONPostData) {
+//        // process the data
+//    } else {
+//        NSLog(@"Unable to serialize the data %@: %@", postData, error);
+//        return;
+//    }
     
     // Create the base64 encoded authentication
     NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
@@ -1273,7 +1274,7 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/co
     [URLRequest addValue:self.awTenantCode.stringValue forHTTPHeaderField:@"aw-tenant-code"];
     [URLRequest addValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
     [URLRequest addValue:totalAuthHeader forHTTPHeaderField:@"Authorization"];
-    [URLRequest setHTTPBody:JSONPostData];
+    //[URLRequest setHTTPBody:JSONPostData];
     URLRequest.HTTPMethod = @"POST";
     
     // Create the semaphore
@@ -1288,6 +1289,11 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/co
         if ([httpResponse statusCode] != 200) {
             NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             NSString *errorMessage;
+            if (!returnedJSON[@"Message"]) {
+                errorMessage = @"Something went wrong when sending the command.";
+            } else {
+                errorMessage = returnedJSON[@"Message"];
+            }
             dispatch_async(dispatch_get_main_queue(), ^{
                 NSAlert *alert = [[NSAlert alloc] init];
                 [alert addButtonWithTitle:@"OK"];
@@ -1335,10 +1341,10 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/co
 
 - (IBAction)deleteDevice:(id)sender {
     NSAlert *alert = [[NSAlert alloc] init];
-    [alert addButtonWithTitle:@"Confirm"];
+    [alert addButtonWithTitle:@"Delete"];
     [alert addButtonWithTitle:@"Cancel"];
     [alert setMessageText:@"Delete the device?"];
-    [alert setInformativeText:@"Deleted devices cannot be restored. You will need to re-enroll the device if you delete it."];
+    [alert setInformativeText:@"This action cannot be undone, you will need to re-enroll the device to use it once again."];
     [alert setAlertStyle:NSAlertStyleCritical];
     [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
         if (returnCode == NSAlertFirstButtonReturn) {
@@ -1380,6 +1386,11 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/co
                 if ([httpResponse statusCode] != 200) {
                     NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
                     NSString *errorMessage;
+                    if (!returnedJSON[@"Message"]) {
+                        errorMessage = @"Something went wrong with trying to delete the device.";
+                    } else {
+                        errorMessage = returnedJSON[@"Message"];
+                    }
                     dispatch_async(dispatch_get_main_queue(), ^{
                         NSAlert *alert = [[NSAlert alloc] init];
                         [alert addButtonWithTitle:@"OK"];
@@ -1402,7 +1413,6 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/co
         }
     }];
 }
-
 
 // This is the function that makes the POST request to actually install the app
 // on the selected device with the app chosen from the previous functions
@@ -1467,6 +1477,11 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/deviceid/co
         if ([httpResponse statusCode] != 200) {
             NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             NSString *errorMessage;
+            if (!returnedJSON[@"Message"]) {
+                errorMessage = @"Something went wrong with installing the app.";
+            } else {
+                errorMessage = returnedJSON[@"Message"];
+            }
             dispatch_async(dispatch_get_main_queue(), ^{
                 NSAlert *alert = [[NSAlert alloc] init];
                 [alert addButtonWithTitle:@"OK"];

@@ -1423,11 +1423,35 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
 }
 
 - (IBAction)enterpriseWipeDevice:(id)sender {
-    [self executeDeviceCommand:@"EnterpriseWipe"];
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"Enterprise Wipe"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setMessageText:@"Enterprise wipe the device?"];
+    [alert setInformativeText:@"This action cannot be undone, and the device will be unenrolled from AirWatch."];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+        if (returnCode == NSAlertFirstButtonReturn) {
+            [self executeDeviceCommand:@"EnterpriseWipe"];
+        } else {
+            return;
+        }
+    }];
 }
 
 - (IBAction)fullWipeDevice:(id)sender {
-    [self executeDeviceCommand:@"DeviceWipe"];
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"Wipe"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setMessageText:@"Completely wipe the device?"];
+    [alert setInformativeText:@"This action cannot be undone, and the device will be unenrolled from AirWatch."];
+    [alert setAlertStyle:NSAlertStyleCritical];
+    [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+        if (returnCode == NSAlertFirstButtonReturn) {
+            [self executeDeviceCommand:@"DeviceWipe"];
+        } else {
+            return;
+        }
+    }];
 }
 
 - (IBAction)deleteDevice:(id)sender {
@@ -1435,7 +1459,7 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
     [alert addButtonWithTitle:@"Delete"];
     [alert addButtonWithTitle:@"Cancel"];
     [alert setMessageText:@"Delete the device?"];
-    [alert setInformativeText:@"This action cannot be undone, you will need to re-enroll the device to use it once again."];
+    [alert setInformativeText:@"This action cannot be undone, and the device will be unenrolled and removed from AirWatch."];
     [alert setAlertStyle:NSAlertStyleCritical];
     [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
         if (returnCode == NSAlertFirstButtonReturn) {
@@ -1473,12 +1497,14 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
             [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
                 
                 if (!data) return;
+                NSLog(@"%@", data);
                 NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-                if ([httpResponse statusCode] != 200) {
+                NSLog(@"%long", [httpResponse statusCode]);
+                if ([httpResponse statusCode] != 202) {
                     NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
                     NSString *errorMessage;
                     if (!returnedJSON[@"Message"]) {
-                        errorMessage = @"Something went wrong with trying to delete the device.";
+                        errorMessage = @"Something went wrong when sending the command.";
                     } else {
                         errorMessage = returnedJSON[@"Message"];
                     }
@@ -1493,8 +1519,27 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
                         }];
                     });
                     return;
+                } else {
+                    dispatch_semaphore_signal(sema);
+                    NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+                    NSString *errorMessage;
+                    if (!returnedJSON[@"Message"]) {
+                        errorMessage = @"Something went wrong when sending the command.";
+                    } else {
+                        errorMessage = returnedJSON[@"Message"];
+                    }
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        NSAlert *alert = [[NSAlert alloc] init];
+                        [alert addButtonWithTitle:@"OK"];
+                        [alert setMessageText:@"Command sent successfully!"];
+                        //[alert setInformativeText:errorMessage];
+                        [alert setAlertStyle:NSAlertStyleWarning];
+                        [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                            return;
+                        }];
+                    });
+                    return;
                 }
-                dispatch_semaphore_signal(sema);
                 
             }] resume];
             

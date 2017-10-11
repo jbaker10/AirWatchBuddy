@@ -288,7 +288,7 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
             NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             NSString *errorMessage;
             if (!returnedJSON[@"Message"]) {
-                errorMessage = @"Something went wrong.";
+                errorMessage = @"Something went wrong with the search.";
             } else {
                 errorMessage = returnedJSON[@"Message"];
             }
@@ -1496,53 +1496,63 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
             NSURLSession *session = [NSURLSession sharedSession];
             [[session dataTaskWithRequest:URLRequest completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
                 
-                if (!data) return;
-                NSLog(@"%@", data);
-                NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-                NSLog(@"%long", [httpResponse statusCode]);
-                if ([httpResponse statusCode] != 202) {
-                    NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-                    NSString *errorMessage;
-                    if (!returnedJSON[@"Message"]) {
-                        errorMessage = @"Something went wrong when sending the command.";
-                    } else {
-                        errorMessage = returnedJSON[@"Message"];
-                    }
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        NSAlert *alert = [[NSAlert alloc] init];
-                        [alert addButtonWithTitle:@"OK"];
-                        [alert setMessageText:@"Received a bad response from the server."];
-                        [alert setInformativeText:errorMessage];
-                        [alert setAlertStyle:NSAlertStyleWarning];
-                        [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                            return;
-                        }];
-                    });
-                    return;
-                } else {
-                    dispatch_semaphore_signal(sema);
-                    NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
-                    NSString *errorMessage;
-                    if (!returnedJSON[@"Message"]) {
-                        errorMessage = @"Something went wrong when sending the command.";
-                    } else {
-                        errorMessage = returnedJSON[@"Message"];
-                    }
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        NSAlert *alert = [[NSAlert alloc] init];
-                        [alert addButtonWithTitle:@"OK"];
-                        [alert setMessageText:@"Command sent successfully!"];
-                        //[alert setInformativeText:errorMessage];
-                        [alert setAlertStyle:NSAlertStyleWarning];
-                        [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                            return;
-                        }];
-                    });
-                    return;
-                }
-                
+//                if (!data) return;
+//                NSLog(@"%@", data);
+//                NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+//                NSLog(@"%long", [httpResponse statusCode]);
+//                if ([httpResponse statusCode] != 202) {
+//                    dispatch_semaphore_signal(sema);
+//                    NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+//                    NSString *errorMessage;
+//                    if (!returnedJSON[@"Message"]) {
+//                        errorMessage = @"Something went wrong when sending the command.";
+//                    } else {
+//                        errorMessage = returnedJSON[@"Message"];
+//                    }
+//                    dispatch_async(dispatch_get_main_queue(), ^{
+//                        NSAlert *alert = [[NSAlert alloc] init];
+//                        [alert addButtonWithTitle:@"OK"];
+//                        [alert setMessageText:@"Received a bad response from the server."];
+//                        [alert setInformativeText:errorMessage];
+//                        [alert setAlertStyle:NSAlertStyleWarning];
+//                        [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+//                            return;
+//                        }];
+//                    });
+//                    return;
+//                } else {
+//                    dispatch_semaphore_signal(sema);
+//                    NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
+//                    NSString *errorMessage;
+//                    if (!returnedJSON[@"Message"]) {
+//                        errorMessage = @"Something went wrong when sending the command.";
+//                    } else {
+//                        errorMessage = returnedJSON[@"Message"];
+//                    }
+//                    dispatch_async(dispatch_get_main_queue(), ^{
+//                        NSAlert *alert = [[NSAlert alloc] init];
+//                        [alert addButtonWithTitle:@"OK"];
+//                        [alert setMessageText:@"Command sent successfully!"];
+//                        //[alert setInformativeText:errorMessage];
+//                        [alert setAlertStyle:NSAlertStyleWarning];
+//                        [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+//                            return;
+//                        }];
+//                    });
+//                    return;
+//                }
             }] resume];
-            
+            dispatch_semaphore_signal(sema);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSAlert *alert = [[NSAlert alloc] init];
+                [alert addButtonWithTitle:@"OK"];
+                [alert setMessageText:@"Command sent successfully!"];
+                //[alert setInformativeText:errorMessage];
+                [alert setAlertStyle:NSAlertStyleWarning];
+                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                    return;
+                }];
+            });
             if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
                 NSLog(@"Timeout");
             }
@@ -1554,19 +1564,17 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
 // on the selected device with the app chosen from the previous functions
 
 - (IBAction)installApp:(id)sender {
-    // Retrieve the device information from the Device Table (in main Windows)
     NSInteger deviceSelectedRow = [self.deviceTableView selectedRow];
     NSString *serialNumber = self.deviceTableArray[deviceSelectedRow][@"SerialNumber"];
     NSLog(@"Sending install command for serial: %@", serialNumber);
     
-    // Retrieve the app information from the InstallAppsTableView (a part of the tableView method)
     NSInteger appSelectedRow = [self.installAppsTableView selectedRow];
     NSNumber *appToInstall = self.installAppsTableArray[appSelectedRow][@"Id"][@"Value"];
-    NSString *typeOfApp = self.installAppsTableArray[appSelectedRow][@"Type"];
+    NSString *typeOfApp = self.installAppsTableArray[appSelectedRow][@"AppType"];
     NSLog(@"Installing app: %@", appToInstall);
-    
     // Create the URL request with the hostname and search URI's
     NSURLComponents *airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
+    
     NSString *appServerPath;
     if ([typeOfApp isEqualToString:@"Purchased"]) {
         appServerPath = kServerURIInstallPurchasedApp;
@@ -1574,8 +1582,13 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
         appServerPath = kServerURIInstallInternalApp;
     } else if ([typeOfApp isEqualToString:@"Public"]) {
         appServerPath = kServerURIInstallPublicApp;
+    } else {
+        // Need to add an alert here to let the user know something went wrong and show an NSAlert
+        NSLog(@"Could not get server URI, will fail out");
+        return;
     }
     airWatchURLComponents.path = [[appServerPath stringByAppendingString:appToInstall.stringValue] stringByAppendingString:@"/install"];
+    
     NSDictionary *postData = [[NSDictionary alloc] initWithObjectsAndKeys:serialNumber, @"SerialNumber", nil];
     NSError *error;
     NSData *JSONPostData = [NSJSONSerialization dataWithJSONObject:postData options:0 error:&error];
@@ -1583,7 +1596,6 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
         // process the data
     } else {
         NSLog(@"Unable to serialize the data %@: %@", postData, error);
-        return;
     }
     
     // Create the base64 encoded authentication
@@ -1614,7 +1626,7 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
             NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             NSString *errorMessage;
             if (!returnedJSON[@"Message"]) {
-                errorMessage = @"Something went wrong with installing the app.";
+                errorMessage = @"Something went wrong.";
             } else {
                 errorMessage = returnedJSON[@"Message"];
             }

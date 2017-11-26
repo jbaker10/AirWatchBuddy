@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "AirWatchBuddy/AppDelegate.m"
-            timestampString = "529438780.264905"
+            timestampString = "533416202.868066"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "290"
-            endingLineNumber = "290"
+            startingLineNumber = "291"
+            endingLineNumber = "291"
             landmarkName = "-userDeviceDetails"
             landmarkType = "7">
          </BreakpointContent>

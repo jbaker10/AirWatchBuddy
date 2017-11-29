@@ -22,8 +22,8 @@ static NSString *const kServerURISecurity = @"/api/mdm/devices/security";
 static NSString *const kServerURINetwork = @"/api/mdm/devices/network";
 static NSString *const kServerPublicApps = @"/api/mam/apps/public";
 static NSString *const kServerInternalApps = @"/api/mam/apps/internal";
-//static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchasedappsearch";
-static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased/search";
+static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchasedappsearch";
+//static NSString *const kServerPurchasedApps = @"/api/mam/apps/purchased/search";
 static NSString *const kServerAllApps = @"/api/mam/apps/search";
 static NSString *const kServerURIInstallPurchasedApp = @"/api/mam/apps/purchased/";
 static NSString *const kServerURIInstallInternalApp = @"/api/mam/apps/internal/";
@@ -104,6 +104,7 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
 @property (weak) IBOutlet NSSecureTextFieldCell *password;
 @property (weak) IBOutlet MKMapView *mapView;
 @property (weak) IBOutlet NSWindow *mapWindow;
+@property NSNumber *totalDevices;
 - (IBAction)closeCredsSheet:(id)sender;
 - (IBAction)quit:(id)sender;
 - (IBAction)getDeviceLocation:(id)sender;
@@ -114,6 +115,7 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
 - (IBAction)installPurchasedApplication:(id)sender;
 - (IBAction)installInternalApplication:(id)sender;
 - (IBAction)installPublicApplication:(id)sender;
+
 
 @end
 
@@ -263,8 +265,13 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
     airWatchURLComponents = [NSURLComponents componentsWithString:self.serverURL.stringValue];
     airWatchURLComponents.path = kServerURIUser;
     NSURLQueryItem *userQuery = [NSURLQueryItem queryItemWithName:@"user" value:self.searchValue.stringValue ];
-    NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"pagesize" value:self.maxDeviceSearch.selectedItem.title];
-    airWatchURLComponents.queryItems = @[ userQuery, pageSize ];
+    if ([self.maxDeviceSearch.selectedItem.title isEqualToString:@"No Limit"]) {
+        airWatchURLComponents.queryItems = @[ userQuery ];
+    } else {
+        NSURLQueryItem *pageSize = [NSURLQueryItem queryItemWithName:@"pagesize" value:self.maxDeviceSearch.selectedItem.title];
+        airWatchURLComponents.queryItems = @[ userQuery, pageSize ];
+    }
+    
     
     // Create the base64 encoded authentication
     NSString *authenticationString = [NSString stringWithFormat:@"%@:%@", self.userName.stringValue, self.password.stringValue];
@@ -288,10 +295,10 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
         if ([httpResponse statusCode] != 200) {
             NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
             NSString *errorMessage;
-            if (!returnedJSON[@"Message"]) {
+            if (!returnedJSON[@"message"]) {
                 errorMessage = @"Something went wrong with the search.";
             } else {
-                errorMessage = returnedJSON[@"Message"];
+                errorMessage = returnedJSON[@"message"];
             }
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.progressIndicator stopAnimation:self];
@@ -340,6 +347,8 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
                 [devicesArray addObject:d];
             }
             self.devicesArray = devicesArray;
+            NSNumber *total_devices = @([returnedJSON[@"Devices"] count]);
+            self.totalDevices = total_devices;
             [self.progressIndicator stopAnimation:self];
             [self.deviceTableView reloadData];
         });
@@ -1261,19 +1270,19 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
         
         if (!data) return;
         NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-        if ([httpResponse statusCode] != 200) {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                NSAlert *alert = [[NSAlert alloc] init];
-                [alert addButtonWithTitle:@"OK"];
-                [alert setMessageText:@"Received a bad response from the server."];
-                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
-                [alert setAlertStyle:NSAlertStyleWarning];
-                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
-                    return;
-                }];
-            });
-            return;
-        }
+//        if ([httpResponse statusCode] != 200) {
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                NSAlert *alert = [[NSAlert alloc] init];
+//                [alert addButtonWithTitle:@"OK"];
+//                [alert setMessageText:@"Received a bad response from the server."];
+//                [alert setInformativeText:@"Please check your search query to ensure it has a matching search paramater and value."];
+//                [alert setAlertStyle:NSAlertStyleWarning];
+//                [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+//                    return;
+//                }];
+//            });
+//            return;
+//        }
         NSDictionary *returnedJSON = [NSJSONSerialization JSONObjectWithData:data options:0 error:NULL];
         //NSLog(@"%@", returnedJSON);
         NSMutableArray *appsArray = [NSMutableArray array];
@@ -1282,14 +1291,15 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
         NSArray *descriptor = [NSArray arrayWithObject:[NSSortDescriptor sortDescriptorWithKey:@"ApplicationName" ascending:YES]];
         NSArray *sortedApps = [appsArray sortedArrayUsingDescriptors:descriptor];
         self.installAppsTableArray = sortedApps;
-        [self.installAppsTableView reloadData];
         dispatch_semaphore_signal(sema);
+        
     }] resume];
     
     if (dispatch_semaphore_wait(sema, dispatch_time(DISPATCH_TIME_NOW, 10 * NSEC_PER_SEC))) {
         NSLog(@"Timeout");
     }
     NSWindowController *availableApps = [[NSWindowController alloc] initWithWindow:self.availableApps];
+    [self.installAppsTableView reloadData];
     [availableApps showWindow:self];
 }
 

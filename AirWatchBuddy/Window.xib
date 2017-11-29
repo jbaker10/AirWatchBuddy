@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="13529" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
-        <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
-        <plugIn identifier="com.apple.MapKitIBPlugin" version="13196"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13529"/>
+        <plugIn identifier="com.apple.MapKitIBPlugin" version="13529"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -16,16 +15,16 @@
         </customObject>
         <window title="AirWatchBuddy" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <rect key="contentRect" x="196" y="240" width="1125" height="552"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="contentRect" x="196" y="240" width="1125" height="610"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <value key="minSize" type="size" width="1125" height="552"/>
             <value key="maxSize" type="size" width="1125" height="552"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="1125" height="552"/>
+                <rect key="frame" x="0.0" y="0.0" width="1125" height="610"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <view wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="E5P-CJ-Oa0">
-                        <rect key="frame" x="0.0" y="0.0" width="1125" height="552"/>
+                        <rect key="frame" x="0.0" y="0.0" width="1125" height="610"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kEI-f6-oa9">
@@ -38,14 +37,14 @@
                                 </textFieldCell>
                             </textField>
                             <scrollView identifier="device_table" fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="19" horizontalPageScroll="10" verticalLineScroll="19" verticalPageScroll="10" usesPredominantAxisScrolling="NO" horizontalScrollElasticity="none" translatesAutoresizingMaskIntoConstraints="NO" id="Utl-Lo-0Bo">
-                                <rect key="frame" x="164" y="326" width="796" height="92"/>
+                                <rect key="frame" x="164" y="326" width="796" height="150"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <clipView key="contentView" identifier="device_table" ambiguous="YES" id="qsi-al-WIZ">
-                                    <rect key="frame" x="1" y="0.0" width="794" height="91"/>
+                                    <rect key="frame" x="1" y="0.0" width="794" height="149"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" columnReordering="NO" columnSelection="YES" columnResizing="NO" multipleSelection="NO" autosaveColumns="NO" rowSizeStyle="automatic" headerView="Og3-fh-zM9" viewBased="YES" id="354-Hd-1MA">
-                                            <rect key="frame" x="0.0" y="0.0" width="794" height="68"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="794" height="126"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <size key="intercellSpacing" width="3" height="2"/>
                                             <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -318,7 +317,7 @@
                                 </textFieldCell>
                             </textField>
                             <button identifier="user_search" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iMH-TE-pTM">
-                                <rect key="frame" x="668" y="480" width="83" height="32"/>
+                                <rect key="frame" x="668" y="538" width="83" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="push" title="Search" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="jX4-HE-c7W">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -500,7 +499,7 @@ DQ
                                 </connections>
                             </textField>
                             <textField identifier="searchby_value" verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2Vm-xd-qnm">
-                                <rect key="frame" x="442" y="487" width="223" height="22"/>
+                                <rect key="frame" x="442" y="545" width="223" height="22"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" alignment="center" identifier="searchby_value" placeholderString="i.e. C07LR09YDY3J" drawsBackground="YES" id="SFY-9b-iiT">
                                     <font key="font" metaFont="system"/>
@@ -509,7 +508,7 @@ DQ
                                 </textFieldCell>
                             </textField>
                             <popUpButton identifier="searchby_choice" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="wfc-J3-5Wr">
-                                <rect key="frame" x="292" y="484" width="138" height="26"/>
+                                <rect key="frame" x="292" y="542" width="138" height="26"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <popUpButtonCell key="cell" type="push" title="UserName" bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="rod-lu-z1j" id="EDt-Cs-Y6K">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -573,7 +572,7 @@ DQ
                                 </connections>
                             </button>
                             <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bFB-KO-rFb">
-                                <rect key="frame" x="672" y="449" width="76" height="26"/>
+                                <rect key="frame" x="611" y="507" width="98" height="26"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <popUpButtonCell key="cell" type="push" title="5" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" state="on" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" selectedItem="1wD-CE-A0l" id="TMd-xT-UkG">
                                     <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -581,15 +580,17 @@ DQ
                                     <menu key="menu" id="zzF-vm-V1p">
                                         <items>
                                             <menuItem title="5" state="on" id="1wD-CE-A0l"/>
+                                            <menuItem title="10" id="gmw-DJ-UGM"/>
                                             <menuItem title="50" id="yWf-v9-rTG"/>
                                             <menuItem title="100" id="BaZ-hj-Wun"/>
+                                            <menuItem title="500" id="wT2-Mg-Fcq"/>
                                             <menuItem title="No Limit" id="TJb-CT-Wel"/>
                                         </items>
                                     </menu>
                                 </popUpButtonCell>
                             </popUpButton>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Rcm-7W-n88">
-                                <rect key="frame" x="449" y="454" width="209" height="17"/>
+                                <rect key="frame" x="398" y="513" width="209" height="17"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Max Number of Devices to return:" id="gOf-jw-jvH">
                                     <font key="font" metaFont="system"/>
@@ -598,9 +599,9 @@ DQ
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Jtm-VI-H0v">
-                                <rect key="frame" x="529" y="426" width="53" height="17"/>
+                                <rect key="frame" x="497" y="484" width="95" height="17"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Results" id="8nP-wf-xPF">
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Total Devices:" id="8nP-wf-xPF">
                                     <font key="font" metaFont="systemBold"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
@@ -619,11 +620,11 @@ DQ
                                 </connections>
                             </textField>
                             <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" maxValue="100" displayedWhenStopped="NO" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="y9Y-Wi-t4K">
-                                <rect key="frame" x="768" y="490" width="16" height="16"/>
+                                <rect key="frame" x="768" y="548" width="16" height="16"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             </progressIndicator>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="BVA-Bq-Cza">
-                                <rect key="frame" x="467" y="517" width="177" height="17"/>
+                                <rect key="frame" x="467" y="575" width="177" height="17"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Enter your search parameter" id="tD3-2c-ddI">
                                     <font key="font" metaFont="system"/>
@@ -631,11 +632,27 @@ DQ
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <textField identifier="total_devices" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="olf-ZX-kdF">
+                                <rect key="frame" x="592" y="484" width="155" height="17"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" id="Tha-yj-mM0">
+                                    <font key="font" metaFont="system"/>
+                                    <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                </textFieldCell>
+                                <connections>
+                                    <binding destination="PWH-po-2tO" name="value" keyPath="self.totalDevices" id="4t0-vm-qLG">
+                                        <dictionary key="options">
+                                            <bool key="NSContinuouslyUpdatesValue" value="YES"/>
+                                        </dictionary>
+                                    </binding>
+                                </connections>
+                            </textField>
                         </subviews>
                     </view>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-345" y="-143"/>
+            <point key="canvasLocation" x="-345.5" y="-114"/>
         </window>
         <arrayController id="mFL-F1-dHJ" userLabel="Device Array">
             <connections>
@@ -663,6 +680,7 @@ DQ
                 <outlet property="searchValue" destination="2Vm-xd-qnm" id="A1u-Kg-uYV"/>
                 <outlet property="securityWindow" destination="syc-5S-JNr" id="1JN-kY-Npb"/>
                 <outlet property="serverURL" destination="VYt-ds-mqy" id="c7l-9I-vJh"/>
+                <outlet property="totalDevices" destination="Tha-yj-mM0" id="lxI-Rx-P3Q"/>
                 <outlet property="userName" destination="Qb2-bd-aOf" id="HDB-wd-tOp"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="m5h-gd-MnN"/>
             </connections>
@@ -1075,7 +1093,7 @@ DQ
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="131" y="399" width="475" height="312"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <view key="contentView" id="QSh-Fg-GMi">
                 <rect key="frame" x="0.0" y="0.0" width="475" height="312"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1185,7 +1203,7 @@ DQ
         <window title="Location Information" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="TnN-J8-0FD">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <rect key="contentRect" x="196" y="240" width="746" height="488"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <value key="minSize" type="size" width="746" height="488"/>
             <value key="maxSize" type="size" width="746" height="488"/>
             <view key="contentView" canDrawConcurrently="YES" id="gcg-Jc-ZK5">
@@ -1203,7 +1221,7 @@ DQ
         <window title="Installed Profiles" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="e5n-4s-bFW">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <rect key="contentRect" x="392" y="395" width="687" height="345"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <value key="minSize" type="size" width="687" height="408"/>
             <value key="maxSize" type="size" width="687" height="408"/>
             <view key="contentView" id="via-1P-pSl">
@@ -1353,7 +1371,7 @@ DQ
         <window title="Installed Applications" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="K5X-Pa-3kt">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <rect key="contentRect" x="196" y="240" width="802" height="417"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <value key="minSize" type="size" width="802" height="479"/>
             <value key="maxSize" type="size" width="802" height="479"/>
             <view key="contentView" id="MzD-PY-a43">
@@ -1569,7 +1587,7 @@ DQ
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="306" height="220"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <value key="minSize" type="size" width="306" height="220"/>
             <value key="maxSize" type="size" width="306" height="220"/>
             <view key="contentView" id="2IG-xV-Uq2">
@@ -1721,7 +1739,7 @@ DQ
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="196" y="240" width="466" height="394"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <value key="minSize" type="size" width="480" height="270"/>
             <value key="maxSize" type="size" width="480" height="270"/>
             <view key="contentView" id="pgv-4N-FKs">
@@ -1975,7 +1993,7 @@ DQ
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="540" y="340" width="862" height="534"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1749"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3360" height="1867"/>
             <view key="contentView" id="665-EA-Dfs">
                 <rect key="frame" x="0.0" y="0.0" width="862" height="534"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

@@ -143,6 +143,12 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
     }
 }
 
+// Quit the app if the main window is closed
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)theApplication {
+    return YES;
+}
+
+// Create the keychain entry
 - (void)setCredsToKeychainWithUserName:(NSString *)userName serverURL:(NSString *)serverURL password:(NSString *)password awTenantCode:(NSString *)awTenantCode {
     void *passwordAndAPIKey = NULL;
     UInt32 passwordandAPIKeyLength = 0;
@@ -347,8 +353,8 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
                 [devicesArray addObject:d];
             }
             self.devicesArray = devicesArray;
-            NSNumber *total_devices = @([returnedJSON[@"Devices"] count]);
-            self.totalDevices = total_devices;
+            NSNumber *totalDevices = @([returnedJSON[@"Devices"] count]);
+            self.totalDevices = totalDevices;
             [self.progressIndicator stopAnimation:self];
             [self.deviceTableView reloadData];
         });
@@ -434,6 +440,8 @@ static NSString *const kServerURIDeviceCommands = @"/api/mdm/devices/";
             [devicesArray addObject:d];
             self.devicesArray = devicesArray;
             self.deviceTableArray = deviceTableArray;
+            NSNumber *totalDevices = @([returnedJSON[@"Devices"] count]);
+            self.totalDevices = totalDevices;
             [self.progressIndicator stopAnimation:self];
             [self.deviceTableView reloadData];
         });
